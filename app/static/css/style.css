@@ -228,14 +228,21 @@
     background: none;
 }
 
+.preset-colors {
+    width: 100%;
+    text-align: center;
+}
+
 .color-presets {
     display: flex;
     align-items: center;
+    max-width: 300px;
+    margin: 0 auto;
 }
 
 .color-btn {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     border: 2px solid #dee2e6;
     border-radius: 6px;
     padding: 0;
@@ -247,48 +254,17 @@
     background-color: transparent;
 }
 
-.color-btn:hover {
-    transform: scale(1.1);
-}
-
-.color-btn.active {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
-}
-
-/* 透明背景按钮特殊样式 */
-.color-btn[data-color="transparent"] {
-    background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
-                      linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
-                      linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
-                      linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
-    background-size: 10px 10px;
-    background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
-}
-
 .custom-color-picker {
-    position: relative;
+    width: 100%;
 }
 
-.form-control-color {
-    width: 40px;
-    height: 30px;
+.custom-color-picker input[type="color"] {
+    width: 45px;
+    height: 35px;
     padding: 0;
     border: 2px solid #dee2e6;
     border-radius: 6px;
     cursor: pointer;
-}
-
-.form-control-color::-webkit-color-swatch {
-    border: none;
-    border-radius: 4px;
-    padding: 0;
-}
-
-.form-control-color::-moz-color-swatch {
-    border: none;
-    border-radius: 4px;
-    padding: 0;
 }
 
 /* 优化预览容器样式 */
@@ -298,15 +274,36 @@
 
 /* 响应式调整 */
 @media (max-width: 768px) {
-    .bg-color-selector {
-        flex-direction: column;
-        gap: 0.5rem;
+    .color-presets {
+        max-width: 250px;
     }
     
-    .color-presets {
-        flex-wrap: wrap;
+    .color-btn {
+        width: 30px;
+        height: 30px;
     }
-} 
+    
+    .custom-color-picker input[type="color"] {
+        width: 40px;
+        height: 30px;
+    }
+    
+    #downloadBtn, #downloadAllBtn {
+        width: 100%;
+        margin: 0;
+        min-width: auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .color-presets {
+        max-width: 200px;
+    }
+    
+    .bg-color-selector .d-flex {
+        gap: 1rem;
+    }
+}
 
 /* 调整卡片页脚样式 */
 .card-footer {
@@ -316,6 +313,7 @@
 /* 下载按钮样式优化 */
 #downloadBtn, #downloadAllBtn {
     min-width: 160px;
+    white-space: nowrap;
 }
 
 /* 确保预览图片不会超出容器 */
