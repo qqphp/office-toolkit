@@ -301,4 +301,110 @@ document.addEventListener('DOMContentLoaded', function() {
             }, 1000);
         }
     };
+
+    // 示例图片数据
+    const examples = {
+        people: {
+            title: '移除人物背景',
+            subtitle: '一款神奇的背景去除器，具有出色的抠图质量和令人惊叹的边缘细节',
+            original: '/static/examples/people/original.png',
+            processed: '/static/examples/people/processed.png'
+        },
+        plants: {
+            title: '移除植物背景',
+            subtitle: '完美保留植物的精细结构，轻松处理复杂的叶片和花瓣边缘',
+            original: '/static/examples/plants/original.png',
+            processed: '/static/examples/plants/processed.png'
+        },
+        animals: {
+            title: '移除动物背景',
+            subtitle: '精确识别动物轮廓，完美保留毛发细节',
+            original: '/static/examples/animals/original.png',
+            processed: '/static/examples/animals/processed.png'
+        },
+        sky: {
+            title: '移除天空背景',
+            subtitle: '智能分离天空元素，完美处理云彩和渐变',
+            original: '/static/examples/sky/original.png',
+            processed: '/static/examples/sky/processed.png'
+        },
+        food: {
+            title: '移除食物背景',
+            subtitle: '完美展现美食细节，突出食材的质感',
+            original: '/static/examples/food/original.png',
+            processed: '/static/examples/food/processed.png'
+        },
+        vehicles: {
+            title: '移除车辆背景',
+            subtitle: '精确处理车辆轮廓，保留反光和金属质感',
+            original: '/static/examples/vehicles/original.png',
+            processed: '/static/examples/vehicles/processed.png'
+        },
+        graphics: {
+            title: '移除图形背景',
+            subtitle: '完美处理各类图形，保持边缘清晰度',
+            original: '/static/examples/graphics/original.png',
+            processed: '/static/examples/graphics/processed.png'
+        },
+        icons: {
+            title: '移除图标背景',
+            subtitle: '完美处理各种图标，保持设计元素的完整性',
+            original: '/static/examples/icons/original.png',
+            processed: '/static/examples/icons/processed.png'
+        },
+        symbols: {
+            title: '移除符号背景',
+            subtitle: '精确处理各类符号，保持线条清晰度',
+            original: '/static/examples/symbols/original.png',
+            processed: '/static/examples/symbols/processed.png'
+        }
+    };
+
+    // 处理类别切换
+    const categoryButtons = document.querySelectorAll('.category-selector .btn');
+    const featureTitle = document.querySelector('.features-section h2');
+    const featureSubtitle = document.querySelector('.features-section .lead');
+
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // 移除其他按钮的激活状态
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            // 激活当前按钮
+            this.classList.add('active');
+            
+            // 获取选中的类别
+            const category = this.dataset.category;
+            
+            // 更新示例图片和文本
+            if (examples[category]) {
+                const originalImg = document.getElementById('exampleOriginal');
+                const processedImg = document.getElementById('exampleProcessed');
+                
+                // 添加淡出效果
+                originalImg.style.opacity = '0';
+                processedImg.style.opacity = '0';
+                featureTitle.style.opacity = '0';
+                featureSubtitle.style.opacity = '0';
+                
+                setTimeout(() => {
+                    // 更新图片
+                    originalImg.src = examples[category].original;
+                    processedImg.src = examples[category].processed;
+                    
+                    // 更新标题和副标题
+                    featureTitle.textContent = examples[category].title;
+                    featureSubtitle.textContent = examples[category].subtitle;
+                    
+                    // 添加淡入效果
+                    originalImg.style.opacity = '1';
+                    processedImg.style.opacity = '1';
+                    featureTitle.style.opacity = '1';
+                    featureSubtitle.style.opacity = '1';
+                }, 300);
+            }
+        });
+    });
+
+    // 默认显示人物示例
+    document.querySelector('[data-category="people"]').click();
 }); 

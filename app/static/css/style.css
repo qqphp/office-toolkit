@@ -154,4 +154,68 @@
 #imageCounter {
     font-size: 0.9rem;
     color: #6c757d;
+}
+
+/* 示例展示区域样式 */
+.features-section {
+    padding: 2rem 0;
+}
+
+.category-selector .btn-group {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.category-selector .btn {
+    border-radius: 20px !important;
+    padding: 0.5rem 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.category-selector .btn.active {
+    background-color: #0d6efd;
+    color: white;
+}
+
+.examples-container {
+    margin-top: 2rem;
+}
+
+.example-img {
+    max-height: 300px;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
+}
+
+.card {
+    border: 1px solid rgba(0,0,0,.125);
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,.1);
+}
+
+.transparent-bg {
+    background-image: linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                      linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                      linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+    background-color: #ffffff;
+}
+
+/* 标题动画效果 */
+.features-section h2,
+.features-section .lead {
+    transition: opacity 0.3s ease;
+}
+
+/* 示例图片动画效果 */
+.example-img {
+    max-height: 300px;
+    object-fit: contain;
+    transition: opacity 0.3s ease;
 } 
