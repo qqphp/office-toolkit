@@ -8,3 +8,4 @@ class Config:
     
     # 添加模型路径配置
     U2NET_HOME = os.path.join('app', 'models') 
+    CASCADE_PATH = os.path.join('app', 'models', 'cascades')
