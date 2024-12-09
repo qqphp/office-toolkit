@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 from app.services.image_service import remove_background
 import os
+import uuid
 
 main_bp = Blueprint('main', __name__)
 
@@ -20,7 +21,9 @@ def process_image():
         
     if file and allowed_file(file.filename):
         filename = secure_filename(file.filename)
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        # 生成唯一文件名避免冲突
+        unique_filename = f"{uuid.uuid4()}_{filename}"
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
         
         # 确保上传目录存在
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -34,6 +37,10 @@ def process_image():
                 'image_url': result_path
             })
         except Exception as e:
+            # 清理临时文件
+            if os.path.exists(filepath):
+                os.remove(filepath)
+            current_app.logger.error(f"处理图片失败: {str(e)}")
             return jsonify({'error': str(e)}), 500
             
     return jsonify({'error': '不支持的文件类型'}), 400

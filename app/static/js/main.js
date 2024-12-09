@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const originalPreview = document.getElementById('originalPreview');
     const resultPreview = document.getElementById('resultPreview');
     const downloadBtn = document.getElementById('downloadBtn');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+    // 添加全局变量来存储图片
+    let currentImageIndex = 0;
+    let processedImages = [];
 
     // 拖放处理
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -50,25 +55,80 @@ document.addEventListener('DOMContentLoaded', function() {
     function handleFiles(files) {
         if (files.length === 0) return;
         
-        const file = files[0];
-        if (!file.type.startsWith('image/')) {
-            showError('请选择图片文件');
-            return;
+        processedImages = [];
+        currentImageIndex = 0;
+        
+        // 显示导航按钮
+        document.querySelector('.image-navigation').classList.remove('d-none');
+        
+        // 处理每个文件
+        Array.from(files).forEach((file, index) => {
+            if (!file.type.startsWith('image/')) {
+                showError('请只选择图片文件');
+                return;
+            }
+            
+            processedImages.push({
+                original: null,
+                processed: null,
+                file: file
+            });
+            
+            // 读取原图
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                processedImages[index].original = e.target.result;
+                if (index === 0) {
+                    showPreview(0);
+                }
+            }
+            reader.readAsDataURL(file);
+            
+            // 上传并处理图片
+            uploadAndProcessImage(file, index);
+        });
+        
+        previewContainer.classList.remove('d-none');
+        updateImageCounter();
+        
+        if (files.length > 1) {
+            downloadAllBtn.classList.remove('d-none');
         }
-
-        // 显示原图预览
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            originalPreview.src = e.target.result;
-            previewContainer.classList.remove('d-none');
-            resultPreview.src = ''; // 清除之前的结果
-            downloadBtn.classList.add('d-none');
-        }
-        reader.readAsDataURL(file);
-
-        // 上传并处理图片
-        uploadAndProcessImage(file);
     }
+
+    function showPreview(index) {
+        if (index >= 0 && index < processedImages.length) {
+            currentImageIndex = index;
+            originalPreview.src = processedImages[index].original || '';
+            resultPreview.src = processedImages[index].processed || '';
+            updateImageCounter();
+            
+            // 更新下载按钮状态
+            if (processedImages[index].processed) {
+                downloadBtn.classList.remove('d-none');
+            } else {
+                downloadBtn.classList.add('d-none');
+            }
+        }
+    }
+
+    function updateImageCounter() {
+        const counter = document.getElementById('imageCounter');
+        counter.textContent = `${currentImageIndex + 1}/${processedImages.length}`;
+    }
+
+    // 添加导航按钮事件监听
+    document.getElementById('prevOriginal').addEventListener('click', () => {
+        if (currentImageIndex > 0) {
+            showPreview(currentImageIndex - 1);
+        }
+    });
+
+    document.getElementById('nextOriginal').addEventListener('click', () => {
+        if (currentImageIndex < processedImages.length - 1) {
+            showPreview(currentImageIndex + 1);
+        }
+    });
 
     function showLoading() {
         const overlay = document.createElement('div');
@@ -89,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    async function uploadAndProcessImage(file) {
+    async function uploadAndProcessImage(file, index) {
         const formData = new FormData();
         formData.append('image', file);
         
@@ -104,9 +164,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (response.ok) {
-                resultPreview.src = data.image_url;
-                downloadBtn.classList.remove('d-none');
-                downloadBtn.onclick = () => downloadImage(data.image_url);
+                processedImages[index].processed = data.image_url;
+                if (index === currentImageIndex) {
+                    resultPreview.src = data.image_url;
+                    downloadBtn.classList.remove('d-none');
+                }
             } else {
                 showError(data.error || '处理失败，请重试');
             }
@@ -145,4 +207,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 3000);
     }
+
+    // 修改下载功能
+    downloadBtn.onclick = () => {
+        if (processedImages[currentImageIndex].processed) {
+            downloadImage(processedImages[currentImageIndex].processed);
+        }
+    };
+
+    // 添加批量下载功能
+    document.getElementById('downloadAllBtn').onclick = () => {
+        processedImages.forEach((image, index) => {
+            if (image.processed) {
+                setTimeout(() => {
+                    downloadImage(image.processed);
+                }, index * 500); // 间隔下载，避免浏览器限制
+            }
+        });
+    };
 }); 
