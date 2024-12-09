@@ -70,9 +70,30 @@ document.addEventListener('DOMContentLoaded', function() {
         uploadAndProcessImage(file);
     }
 
+    function showLoading() {
+        const overlay = document.createElement('div');
+        overlay.className = 'loading-overlay';
+        overlay.innerHTML = `
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <div class="loading-text">正在处理图片，请稍候...</div>
+        `;
+        document.body.appendChild(overlay);
+        return overlay;
+    }
+
+    function hideLoading(overlay) {
+        if (overlay && overlay.parentNode) {
+            overlay.remove();
+        }
+    }
+
     async function uploadAndProcessImage(file) {
         const formData = new FormData();
         formData.append('image', file);
+        
+        const loadingOverlay = showLoading();
 
         try {
             const response = await fetch('/remove-background', {
@@ -91,6 +112,8 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             showError('网络错误，请重试');
+        } finally {
+            hideLoading(loadingOverlay);
         }
     }
 
@@ -104,10 +127,22 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function showError(message) {
+        // 移除已存在的错误消息
+        const existingError = document.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+
         const errorDiv = document.createElement('div');
         errorDiv.className = 'error-message';
         errorDiv.textContent = message;
-        dropZone.appendChild(errorDiv);
-        setTimeout(() => errorDiv.remove(), 3000);
+        document.body.appendChild(errorDiv);
+
+        // 3秒后自动移除
+        setTimeout(() => {
+            if (errorDiv && errorDiv.parentNode) {
+                errorDiv.remove();
+            }
+        }, 3000);
     }
 }); 
