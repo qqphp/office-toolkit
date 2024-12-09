@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h1 class="mb-4">图片背景透明处理工具</h1>
+        <div class="upload-container p-5 border rounded">
+            <div class="upload-area" id="dropZone">
+                <p class="mb-3">将图片拖放到这里，或点击上传</p>
+                <input type="file" id="fileInput" class="d-none" accept="image/*">
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    选择图片
+                </button>
+            </div>
+            
+            <div id="previewContainer" class="mt-4 d-none">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>原图</h5>
+                        <img id="originalPreview" class="img-fluid">
+                    </div>
+                    <div class="col-md-6">
+                        <h5>处理结果</h5>
+                        <img id="resultPreview" class="img-fluid">
+                    </div>
+                </div>
+                <button id="downloadBtn" class="btn btn-success mt-3 d-none">
+                    下载处理结果
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
