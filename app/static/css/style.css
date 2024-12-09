@@ -63,8 +63,62 @@
 }
 
 .progress {
-    height: 0.5rem;
-    margin-top: 1rem;
+    height: 0.6rem;
+    border-radius: 0.25rem;
+    background-color: #e9ecef;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: #0d6efd;
+    transition: width 0.3s ease;
+}
+
+#progressText {
+    font-size: 0.85rem;
+}
+
+#progressText .badge {
+    font-weight: normal;
+    padding: 0.5em 1em;
+}
+
+/* 添加进度条动画效果 */
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+.progress-bar-striped {
+    background-image: linear-gradient(45deg, 
+        rgba(255,255,255,.15) 25%, 
+        transparent 25%, 
+        transparent 50%, 
+        rgba(255,255,255,.15) 50%, 
+        rgba(255,255,255,.15) 75%, 
+        transparent 75%, 
+        transparent);
+    background-size: 1rem 1rem;
+}
+
+/* 进度条显示/隐藏动画 */
+.progress-section {
+    transition: all 0.3s ease;
+    opacity: 1;
+}
+
+.progress-section.d-none {
+    opacity: 0;
+}
+
+.progress-section .card {
+    background-color: #f8f9fa;
+    border: 1px solid rgba(0,0,0,.125);
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+}
+
+.progress-section .card-subtitle {
+    font-size: 0.9rem;
+    font-weight: 500;
 }
 
 .error-message {
@@ -87,31 +141,6 @@
     10% { opacity: 1; }
     90% { opacity: 1; }
     100% { opacity: 0; }
-}
-
-.loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(255, 255, 255, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    flex-direction: column;
-}
-
-.loading-text {
-    margin-top: 1rem;
-    color: #0d6efd;
-    font-size: 1.1rem;
-}
-
-.spinner-border {
-    width: 3rem;
-    height: 3rem;
 }
 
 .image-navigation {

@@ -61,6 +61,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // 显示导航按钮
         document.querySelector('.image-navigation').classList.remove('d-none');
         
+        const totalFiles = files.length;
+        let processedCount = 0;
+        
+        // 显示进度条并重置状态
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        // 重置进度条状态
+        progressContainer.classList.remove('d-none');
+        progressBar.style.width = '0%';
+        progressBar.setAttribute('aria-valuenow', 0);
+        progressText.innerHTML = `<span class="badge bg-primary">准备处理 ${totalFiles} 张图片</span>`;
+        
         // 处理每个文件
         Array.from(files).forEach((file, index) => {
             if (!file.type.startsWith('image/')) {
@@ -85,15 +99,47 @@ document.addEventListener('DOMContentLoaded', function() {
             reader.readAsDataURL(file);
             
             // 上传并处理图片
-            uploadAndProcessImage(file, index);
+            uploadAndProcessImage(file, index).then(() => {
+                processedCount++;
+                // 更新进度条
+                const progress = (processedCount / totalFiles) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressBar.setAttribute('aria-valuenow', progress);
+                
+                // 更新进度文本
+                if (processedCount === totalFiles) {
+                    progressText.innerHTML = '<span class="badge bg-success">所有图片处理完成</span>';
+                } else {
+                    progressText.innerHTML = `<span class="badge bg-primary">正在处理第 ${processedCount}/${totalFiles} 张图片</span>`;
+                }
+                
+                // 所有图片处理完成
+                if (processedCount === totalFiles) {
+                    setTimeout(() => {
+                        progressContainer.classList.add('d-none');
+                        if (totalFiles > 1) {
+                            downloadAllBtn.classList.remove('d-none');
+                        }
+                    }, 1500); // 延长显示完成状态的时间
+                }
+            }).catch(() => {
+                processedCount++;
+                // 即使处理失败也更新进度
+                const progress = (processedCount / totalFiles) * 100;
+                progressBar.style.width = `${progress}%`;
+                progressBar.setAttribute('aria-valuenow', progress);
+                
+                if (processedCount === totalFiles) {
+                    progressText.innerHTML = '<span class="badge bg-warning">处理完成，部分图片可能失败</span>';
+                    setTimeout(() => {
+                        progressContainer.classList.add('d-none');
+                    }, 1500);
+                }
+            });
         });
         
         previewContainer.classList.remove('d-none');
         updateImageCounter();
-        
-        if (files.length > 1) {
-            downloadAllBtn.classList.remove('d-none');
-        }
     }
 
     function showPreview(index) {
@@ -130,30 +176,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    function showLoading() {
-        const overlay = document.createElement('div');
-        overlay.className = 'loading-overlay';
-        overlay.innerHTML = `
-            <div class="spinner-border text-primary" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
-            <div class="loading-text">正在处理图片，请稍候...</div>
-        `;
-        document.body.appendChild(overlay);
-        return overlay;
-    }
-
-    function hideLoading(overlay) {
-        if (overlay && overlay.parentNode) {
-            overlay.remove();
-        }
-    }
-
     async function uploadAndProcessImage(file, index) {
         const formData = new FormData();
         formData.append('image', file);
-        
-        const loadingOverlay = showLoading();
 
         try {
             const response = await fetch('/remove-background', {
@@ -174,8 +199,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         } catch (error) {
             showError('网络错误，请重试');
-        } finally {
-            hideLoading(loadingOverlay);
+            console.error('Upload error:', error);
         }
     }
 
@@ -217,7 +241,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 修改批量下载功能
     document.getElementById('downloadAllBtn').onclick = async () => {
-        const loadingOverlay = showLoading();
+        // 使用进度条来显示下载状态
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        progressContainer.classList.remove('d-none');
+        progressBar.style.width = '100%';
+        progressBar.setAttribute('aria-valuenow', 100);
+        progressText.innerHTML = '<span class="badge bg-primary">正在打包下载...</span>';
+
         try {
             // 收集所有已处理的图片URL
             const processedFiles = processedImages
@@ -251,6 +284,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 link.click();
                 document.body.removeChild(link);
                 window.URL.revokeObjectURL(url);
+                
+                // 显示成功状态
+                progressText.innerHTML = '<span class="badge bg-success">下载已开始</span>';
             } else {
                 const error = await response.json();
                 showError(error.error || '下载失败，请重试');
@@ -259,7 +295,10 @@ document.addEventListener('DOMContentLoaded', function() {
             showError('下载失败，请重试');
             console.error('Download error:', error);
         } finally {
-            hideLoading(loadingOverlay);
+            // 延迟隐藏进度条
+            setTimeout(() => {
+                progressContainer.classList.add('d-none');
+            }, 1000);
         }
     };
 }); 
