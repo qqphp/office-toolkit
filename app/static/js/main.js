@@ -378,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         graphics: {
             title: '移除图形背景',
-            subtitle: '完美处理各类图形，保持边缘清晰��',
+            subtitle: '完美处理各类图形，保持边缘清晰',
             original: '/static/examples/graphics/original.png',
             processed: '/static/examples/graphics/processed.png'
         },
