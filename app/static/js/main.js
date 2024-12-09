@@ -398,8 +398,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 处理类别切换
     const categoryButtons = document.querySelectorAll('.category-selector .btn');
-    const featureTitle = document.querySelector('.features-section h2');
-    const featureSubtitle = document.querySelector('.features-section .lead');
+    const featureTitle = document.querySelector('.features-section .section-title');
+    const featureSubtitle = document.querySelector('.features-section .section-subtitle');
 
     categoryButtons.forEach(button => {
         button.addEventListener('click', function() {
