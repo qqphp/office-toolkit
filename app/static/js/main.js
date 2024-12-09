@@ -203,13 +203,48 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function downloadImage(url) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'processed-image.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+    function getCurrentBackgroundColor() {
+        const container = document.getElementById('resultContainer');
+        if (container.classList.contains('transparent-bg-container')) {
+            return 'transparent';
+        }
+        return container.style.backgroundColor || 'transparent';
+    }
+
+    async function downloadImage(url) {
+        const bgColor = getCurrentBackgroundColor();
+        console.log('Downloading image:', url);
+        try {
+            const response = await fetch('/download-image', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    image_url: url,
+                    background_color: bgColor
+                })
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = 'processed-image.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(downloadUrl);
+            } else {
+                const error = await response.json();
+                console.error('Download failed:', error);
+                showError(error.error || '下载失败，请重试');
+            }
+        } catch (error) {
+            console.error('Download error:', error);
+            showError('下载失败，请重试');
+        }
     }
 
     function showError(message) {
@@ -232,75 +267,76 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    // 修改下载功能
-    downloadBtn.onclick = () => {
-        if (processedImages[currentImageIndex].processed) {
-            downloadImage(processedImages[currentImageIndex].processed);
-        }
-    };
-
-    // 修改批量下载功能
-    document.getElementById('downloadAllBtn').onclick = async () => {
-        // 使用进度条来显示下载状态
-        const progressContainer = document.getElementById('progressContainer');
-        const progressBar = document.getElementById('progressBar');
-        const progressText = document.getElementById('progressText');
-        
-        progressContainer.classList.remove('d-none');
-        progressBar.style.width = '100%';
-        progressBar.setAttribute('aria-valuenow', 100);
-        progressText.innerHTML = '<span class="badge bg-primary">正在打包下载...</span>';
-
-        try {
-            // 收集所有已处理的图片URL
-            const processedFiles = processedImages
-                .filter(image => image.processed)
-                .map(image => image.processed);
-
-            if (processedFiles.length === 0) {
-                showError('没有可下载的文件');
-                return;
+    // 下载当前图片
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            const currentImage = processedImages[currentImageIndex];
+            if (currentImage && currentImage.processed) {
+                downloadImage(currentImage.processed);
             }
+        });
+    }
 
-            const response = await fetch('/download-all', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    files: processedFiles
-                })
-            });
+    // 批量下载
+    if (downloadAllBtn) {
+        downloadAllBtn.addEventListener('click', async () => {
+            const bgColor = getCurrentBackgroundColor();
+            const progressContainer = document.getElementById('progressContainer');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            
+            progressContainer.classList.remove('d-none');
+            progressBar.style.width = '100%';
+            progressBar.setAttribute('aria-valuenow', 100);
+            progressText.innerHTML = '<span class="badge bg-primary">正在打包下载...</span>';
 
-            if (response.ok) {
-                // 获取blob数据
-                const blob = await response.blob();
-                // 创建下载链接
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = response.headers.get('content-disposition')?.split('filename=')[1] || 'processed_images.zip';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                window.URL.revokeObjectURL(url);
-                
-                // 显示成功状态
-                progressText.innerHTML = '<span class="badge bg-success">下载已开始</span>';
-            } else {
-                const error = await response.json();
-                showError(error.error || '下载失败，请重试');
+            try {
+                const processedFiles = processedImages
+                    .filter(image => image.processed)
+                    .map(image => image.processed);
+
+                if (processedFiles.length === 0) {
+                    showError('没有可下载的文件');
+                    return;
+                }
+
+                const response = await fetch('/download-all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        files: processedFiles,
+                        background_color: bgColor
+                    })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = 'processed_images.zip';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(url);
+                    
+                    progressText.innerHTML = '<span class="badge bg-success">下载已开始</span>';
+                } else {
+                    const error = await response.json();
+                    showError(error.error || '下载失败，请重试');
+                }
+            } catch (error) {
+                showError('下载失败，请重试');
+                console.error('Download error:', error);
+            } finally {
+                setTimeout(() => {
+                    progressContainer.classList.add('d-none');
+                }, 1000);
             }
-        } catch (error) {
-            showError('下载失败，请重试');
-            console.error('Download error:', error);
-        } finally {
-            // 延迟隐藏进度条
-            setTimeout(() => {
-                progressContainer.classList.add('d-none');
-            }, 1000);
-        }
-    };
+        });
+    }
 
     // 示例图片数据
     const examples = {
@@ -342,7 +378,7 @@ document.addEventListener('DOMContentLoaded', function() {
         },
         graphics: {
             title: '移除图形背景',
-            subtitle: '完美处理各类图形，保持边缘清晰度',
+            subtitle: '完美处理各类图形，保持边缘清晰��',
             original: '/static/examples/graphics/original.png',
             processed: '/static/examples/graphics/processed.png'
         },
@@ -407,4 +443,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 默认显示人物示例
     document.querySelector('[data-category="people"]').click();
+
+    // 背景颜色选择功能
+    const colorButtons = document.querySelectorAll('.color-btn');
+    const customColorPicker = document.getElementById('customColorPicker');
+    const resultContainer = document.getElementById('resultContainer');
+
+    // 更新背景颜色函数
+    function updateBackgroundColor(color) {
+        if (color === 'transparent') {
+            resultContainer.style.backgroundColor = '';
+            resultContainer.classList.add('transparent-bg-container');
+        } else {
+            resultContainer.style.backgroundColor = color;
+            resultContainer.classList.remove('transparent-bg-container');
+        }
+        
+        // 更新按钮状态
+        colorButtons.forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.color === color || btn.dataset.color === color.toUpperCase()) {
+                btn.classList.add('active');
+            }
+        });
+    }
+
+    // 预设颜色按钮点击事件
+    colorButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const color = button.dataset.color;
+            updateBackgroundColor(color);
+        });
+    });
+
+    // 自定义颜色选择事件
+    customColorPicker.addEventListener('input', (e) => {
+        const color = e.target.value;
+        updateBackgroundColor(color);
+        // 移除其他按钮的激活状态
+        colorButtons.forEach(btn => btn.classList.remove('active'));
+    });
 }); 

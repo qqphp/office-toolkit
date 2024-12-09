@@ -7,6 +7,8 @@ import zipfile
 from io import BytesIO
 from flask import send_file
 import time
+from PIL import Image
+import io
 
 main_bp = Blueprint('main', __name__)
 
@@ -49,42 +51,106 @@ def process_image():
             
     return jsonify({'error': '不支持的文件类型'}), 400
 
+@main_bp.route('/download-image', methods=['POST'])
+def download_image():
+    data = request.get_json()
+    if not data or 'image_url' not in data:
+        return jsonify({'error': '无效的请求'}), 400
+        
+    image_url = data['image_url']
+    bg_color = data.get('background_color', 'transparent')
+    
+    try:
+        # 修正图片路径处理
+        # 从 URL 中提取相对路径
+        relative_path = image_url.split('/static/')[-1] if '/static/' in image_url else image_url.lstrip('/')
+        # 构建完整的文件系统路径
+        image_path = os.path.join(current_app.root_path, 'static', relative_path)
+        
+        current_app.logger.debug(f"Attempting to access image at: {image_path}")  # 添加日志
+        
+        if not os.path.exists(image_path):
+            current_app.logger.error(f"Image not found at path: {image_path}")  # 添加日志
+            return jsonify({'error': '图片不存在'}), 404
+            
+        # 打开图片
+        img = Image.open(image_path)
+        
+        # 如果指定了背景颜色且不是透明
+        if bg_color != 'transparent':
+            # 创建新的图片，使用指定的背景颜色
+            background = Image.new('RGBA', img.size, bg_color)
+            # 将原图复制到背景上
+            if img.mode == 'RGBA':
+                background.paste(img, mask=img.split()[3])
+            else:
+                background.paste(img)
+            img = background
+            
+        # 将图片保存到内存中
+        img_io = io.BytesIO()
+        img.save(img_io, 'PNG', quality=95)
+        img_io.seek(0)
+        
+        timestamp = time.strftime('%Y%m%d_%H%M%S')
+        return send_file(
+            img_io,
+            mimetype='image/png',
+            as_attachment=True,
+            download_name=f'processed_image_{timestamp}.png'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"下载图片失败: {str(e)}")
+        return jsonify({'error': '处理图片失败'}), 500
+
 @main_bp.route('/download-all', methods=['POST'])
 def download_all():
+    data = request.get_json()
+    if not data or 'files' not in data:
+        return jsonify({'error': '无效的请求'}), 400
+        
+    files = data['files']
+    bg_color = data.get('background_color', 'transparent')
+    
+    if not files:
+        return jsonify({'error': '没有可下载的文件'}), 400
+        
     try:
-        files = request.json.get('files', [])
-        if not files:
-            return jsonify({'error': '没有可下载的文件'}), 400
-
-        current_app.logger.debug(f"准备打包文件: {files}")
-
-        memory_file = BytesIO()
+        memory_file = io.BytesIO()
         with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for file_url in files:
-                relative_path = file_url.lstrip('/')
-                file_path = os.path.join(current_app.root_path, relative_path)
+            for i, file_url in enumerate(files):
+                # 修正图片路径处理
+                relative_path = file_url.split('/static/')[-1] if '/static/' in file_url else file_url.lstrip('/')
+                image_path = os.path.join(current_app.root_path, 'static', relative_path)
                 
-                current_app.logger.debug(f"处理文件: {file_path}")
-                
-                if os.path.exists(file_path):
-                    # 获取原始文件名（去掉UUID前缀）
-                    filename = os.path.basename(file_path)
-                    # UUID_原始文件名.png 格式
-                    parts = filename.split('_', 1)  # 只在第一个下划线处分割
-                    if len(parts) > 1:
-                        original_filename = parts[1]  # 获取原始文件名部分
-                    else:
-                        original_filename = filename  # 如果没有下划线，使用完整文件名
-                        
-                    # 确保文件名以.png结尾
-                    if not original_filename.lower().endswith('.png'):
-                        original_filename = os.path.splitext(original_filename)[0] + '.png'
+                if not os.path.exists(image_path):
+                    current_app.logger.warning(f"Skipping non-existent file: {image_path}")
+                    continue
                     
-                    zf.write(file_path, original_filename)
-                    current_app.logger.debug(f"已添加文件: {original_filename}")
-                else:
-                    current_app.logger.error(f"文件不存在: {file_path}")
-
+                # 打开图片
+                img = Image.open(image_path)
+                
+                # 如果指定了背景颜色且不是透明
+                if bg_color != 'transparent':
+                    # 创建新的图片，使用指定的背景颜色
+                    background = Image.new('RGBA', img.size, bg_color)
+                    # 将原图复制到背景上
+                    if img.mode == 'RGBA':
+                        background.paste(img, mask=img.split()[3])
+                    else:
+                        background.paste(img)
+                    img = background
+                
+                # 将处理后的图片保存到内存中
+                img_io = io.BytesIO()
+                img.save(img_io, 'PNG', quality=95)
+                img_io.seek(0)
+                
+                # 添加到zip文件
+                timestamp = time.strftime('%Y%m%d_%H%M%S')
+                zf.writestr(f'processed_image_{i+1}_{timestamp}.png', img_io.getvalue())
+                
         memory_file.seek(0)
         
         timestamp = time.strftime('%Y%m%d_%H%M%S')
@@ -94,10 +160,10 @@ def download_all():
             as_attachment=True,
             download_name=f'processed_images_{timestamp}.zip'
         )
-
+        
     except Exception as e:
         current_app.logger.error(f"打包下载失败: {str(e)}")
-        return jsonify({'error': '打包下载失败'}), 500
+        return jsonify({'error': '打包文件失败'}), 500
 
 def allowed_file(filename):
     return '.' in filename and \
