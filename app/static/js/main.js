@@ -215,14 +215,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // 添加批量下载功能
-    document.getElementById('downloadAllBtn').onclick = () => {
-        processedImages.forEach((image, index) => {
-            if (image.processed) {
-                setTimeout(() => {
-                    downloadImage(image.processed);
-                }, index * 500); // 间隔下载，避免浏览器限制
+    // 修改批量下载功能
+    document.getElementById('downloadAllBtn').onclick = async () => {
+        const loadingOverlay = showLoading();
+        try {
+            // 收集所有已处理的图片URL
+            const processedFiles = processedImages
+                .filter(image => image.processed)
+                .map(image => image.processed);
+
+            if (processedFiles.length === 0) {
+                showError('没有可下载的文件');
+                return;
             }
-        });
+
+            const response = await fetch('/download-all', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    files: processedFiles
+                })
+            });
+
+            if (response.ok) {
+                // 获取blob数据
+                const blob = await response.blob();
+                // 创建下载链接
+                const url = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = response.headers.get('content-disposition')?.split('filename=')[1] || 'processed_images.zip';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(url);
+            } else {
+                const error = await response.json();
+                showError(error.error || '下载失败，请重试');
+            }
+        } catch (error) {
+            showError('下载失败，请重试');
+            console.error('Download error:', error);
+        } finally {
+            hideLoading(loadingOverlay);
+        }
     };
 }); 
