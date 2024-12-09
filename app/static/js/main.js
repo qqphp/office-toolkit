@@ -316,7 +316,19 @@ document.addEventListener('DOMContentLoaded', function() {
                     const url = window.URL.createObjectURL(blob);
                     const link = document.createElement('a');
                     link.href = url;
-                    link.download = 'processed_images.zip';
+                    
+                    // 从响应头中获取文件名
+                    const contentDisposition = response.headers.get('content-disposition');
+                    let filename = 'wuying.zip'; // 默认文件名
+                    
+                    if (contentDisposition) {
+                        const matches = /filename=(.+)/.exec(contentDisposition);
+                        if (matches && matches[1]) {
+                            filename = decodeURIComponent(matches[1].replace(/["']/g, ''));
+                        }
+                    }
+                    
+                    link.download = filename;
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);

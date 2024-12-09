@@ -153,12 +153,14 @@ def download_all():
         
         # 生成随机字符串
         random_str = uuid.uuid4().hex[:8]
+        # 构造下载文件名
+        download_filename = f'wuying_{random_str}.zip'
         
         return send_file(
             memory_file,
             mimetype='application/zip',
             as_attachment=True,
-            download_name=f'无影抠图_{random_str}.zip'
+            download_name=download_filename  # 使用新的文件名格式
         )
         
     except Exception as e:
