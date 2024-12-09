@@ -36,48 +36,66 @@
             <div id="previewContainer" class="mt-4 d-none">
                 <div class="row">
                     <div class="col-md-6">
-                        <h5>原图</h5>
-                        <div class="preview-box original-preview-container">
-                            <img id="originalPreview" class="img-fluid">
-                        </div>
-                        <div class="mt-2 text-center image-navigation d-none">
-                            <button class="btn btn-sm btn-outline-primary" id="prevOriginal">上一张</button>
-                            <span id="imageCounter" class="mx-2">1/1</span>
-                            <button class="btn btn-sm btn-outline-primary" id="nextOriginal">下一张</button>
+                        <div class="card h-100">
+                            <div class="card-header bg-transparent">
+                                <h5 class="mb-0">原图</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="preview-box original-preview-container">
+                                    <img id="originalPreview" class="img-fluid">
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="image-navigation d-none">
+                                    <button class="btn btn-sm btn-outline-primary" id="prevOriginal">上一张</button>
+                                    <span id="imageCounter" class="mx-2">1/1</span>
+                                    <button class="btn btn-sm btn-outline-primary" id="nextOriginal">下一张</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-6">
-                        <h5>处理结果</h5>
-                        <div class="preview-box transparent-bg-container" id="resultContainer">
-                            <img id="resultPreview" class="img-fluid">
-                        </div>
-                        <div class="bg-color-selector mt-3">
-                            <div class="d-flex align-items-center">
-                                <label class="me-2 text-muted">背景颜色:</label>
-                                <div class="color-presets d-flex gap-2 me-3">
-                                    <button class="color-btn active" data-color="transparent" title="透明背景">
-                                        <i class="bi bi-border"></i>
-                                    </button>
-                                    <button class="color-btn" data-color="#FFFFFF" style="background-color: #FFFFFF;" title="白色"></button>
-                                    <button class="color-btn" data-color="#000000" style="background-color: #000000;" title="黑色"></button>
-                                    <button class="color-btn" data-color="#FF0000" style="background-color: #FF0000;" title="红色"></button>
-                                    <button class="color-btn" data-color="#00FF00" style="background-color: #00FF00;" title="绿色"></button>
-                                    <button class="color-btn" data-color="#0000FF" style="background-color: #0000FF;" title="蓝色"></button>
+                        <div class="card h-100">
+                            <div class="card-header bg-transparent">
+                                <h5 class="mb-0">处理结果</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="preview-box transparent-bg-container" id="resultContainer">
+                                    <img id="resultPreview" class="img-fluid">
                                 </div>
-                                <div class="custom-color-picker">
-                                    <input type="color" id="customColorPicker" class="form-control form-control-color" title="选择自定义颜色">
+                            </div>
+                            <div class="card-footer bg-transparent">
+                                <div class="bg-color-selector">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <label class="me-2 text-muted">背景颜色:</label>
+                                        <div class="color-presets d-flex gap-2 me-3">
+                                            <button class="color-btn active" data-color="transparent" title="透明背景">
+                                                <i class="bi bi-border"></i>
+                                            </button>
+                                            <button class="color-btn" data-color="#FFFFFF" style="background-color: #FFFFFF;" title="白色"></button>
+                                            <button class="color-btn" data-color="#000000" style="background-color: #000000;" title="黑色"></button>
+                                            <button class="color-btn" data-color="#FF0000" style="background-color: #FF0000;" title="红色"></button>
+                                            <button class="color-btn" data-color="#0000FF" style="background-color: #0000FF;" title="蓝色"></button>
+                                        </div>
+                                        <div class="custom-color-picker">
+                                            <input type="color" id="customColorPicker" class="form-control form-control-color" title="选择自定义颜色">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="mt-3 text-center">
-                    <button id="downloadBtn" class="btn btn-success me-2 d-none">
-                        下载当前图片
-                    </button>
-                    <button id="downloadAllBtn" class="btn btn-primary d-none">
-                        打包下载全部
-                    </button>
+                
+                <div class="card mt-4">
+                    <div class="card-body text-center">
+                        <button id="downloadBtn" class="btn btn-success me-3 d-none">
+                            <i class="bi bi-download me-1"></i>下载当前图片
+                        </button>
+                        <button id="downloadAllBtn" class="btn btn-primary d-none">
+                            <i class="bi bi-file-earmark-zip me-1"></i>打包下载全部
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

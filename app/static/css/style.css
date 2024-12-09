@@ -23,15 +23,13 @@
 
 /* 修改预览容器的通用样式 */
 .preview-box {
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    padding: 0.5rem;
-    height: 100%;
-    min-height: 320px; /* 300px 最大图片高度 + 20px padding */
+    min-height: 300px;
+    padding: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color 0.3s ease;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
 }
 
 /* 原图预览容器 */
@@ -145,7 +143,10 @@
 }
 
 .image-navigation {
-    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 
 .image-navigation button {
@@ -223,9 +224,8 @@
 
 /* 背景颜色选择器样式 */
 .bg-color-selector {
-    background-color: #f8f9fa;
-    border-radius: 6px;
-    padding: 0.75rem;
+    padding: 0;
+    background: none;
 }
 
 .color-presets {
@@ -307,3 +307,20 @@
         flex-wrap: wrap;
     }
 } 
+
+/* 调整卡片页脚样式 */
+.card-footer {
+    padding: 1rem;
+}
+
+/* 下载按钮样式优化 */
+#downloadBtn, #downloadAllBtn {
+    min-width: 160px;
+}
+
+/* 确保预览图片不会超出容器 */
+#originalPreview, #resultPreview {
+    max-width: 100%;
+    max-height: 300px;
+    object-fit: contain;
+}
