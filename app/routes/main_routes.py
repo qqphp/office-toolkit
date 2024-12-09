@@ -133,9 +133,7 @@ def download_all():
                 
                 # 如果指定了背景颜色且不是透明
                 if bg_color != 'transparent':
-                    # 创建新的图片，使用指定的背景颜色
                     background = Image.new('RGBA', img.size, bg_color)
-                    # 将原图复制到背景上
                     if img.mode == 'RGBA':
                         background.paste(img, mask=img.split()[3])
                     else:
@@ -150,15 +148,17 @@ def download_all():
                 # 添加到zip文件
                 timestamp = time.strftime('%Y%m%d_%H%M%S')
                 zf.writestr(f'processed_image_{i+1}_{timestamp}.png', img_io.getvalue())
-                
+
         memory_file.seek(0)
         
-        timestamp = time.strftime('%Y%m%d_%H%M%S')
+        # 生成随机字符串
+        random_str = uuid.uuid4().hex[:8]
+        
         return send_file(
             memory_file,
             mimetype='application/zip',
             as_attachment=True,
-            download_name=f'processed_images_{timestamp}.zip'
+            download_name=f'无影抠图_{random_str}.zip'
         )
         
     except Exception as e:
