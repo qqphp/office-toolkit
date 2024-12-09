@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}图片背景透明处理工具{% endblock %}</title>
+    <title>{% block title %}无影抠图 图片背景透明处理工具{% endblock %}</title>
     {{ bootstrap.load_css() }}
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-icons.css') }}">
 </head>
@@ -12,7 +13,10 @@
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">
-                背景透明工具
+                <img src="{{ url_for('static', filename='images/logo.png') }}" 
+                     alt="无影抠图" 
+                     height="40" 
+                     class="d-inline-block align-text-top">
             </a>
         </div>
     </nav>
