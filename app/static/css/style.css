@@ -481,3 +481,41 @@
         font-size: 0.875rem;
     }
 }
+
+/* 导航栏样式优化 */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,.08);
+    padding: 0.5rem 1rem;
+}
+
+.navbar-nav .nav-link {
+    padding: 0.8rem 1.2rem;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.navbar-nav .nav-link.active {
+    color: #0d6efd !important;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* 响应式调整 */
+@media (max-width: 991.98px) {
+    .navbar-nav {
+        padding: 1rem 0;
+    }
+    
+    .navbar-nav .nav-link {
+        padding: 0.5rem 1rem;
+        margin: 0.2rem 0;
+    }
+}
+
+/* 导航图标对齐 */
+.nav-link i {
+    vertical-align: -0.125em;
+}

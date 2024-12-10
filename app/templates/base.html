@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}无影抠图 图片背景透明处理工具{% endblock %}</title>
+    <title>{{ get_page_meta('title') }}</title>
+    <meta name="description" content="{{ get_page_meta('description') }}">
     {{ bootstrap.load_css() }}
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
@@ -13,14 +14,43 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-light">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('main.index') }}">
+            <a class="navbar-brand" href="{{ url_for('main.home') }}">
                 <img src="{{ url_for('static', filename='images/logo.png') }}" 
                      alt="无影抠图" 
                      height="40" 
                      class="d-inline-block align-text-top">
             </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.home' }}" 
+                           href="{{ url_for('main.home') }}">
+                            <i class="bi bi-house-door me-1"></i>首页
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.index' }}" 
+                           href="{{ url_for('main.index') }}">
+                            <i class="bi bi-image me-1"></i>透明背景
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.convert_pdf' }}" 
+                           href="{{ url_for('main.convert_pdf') }}">
+                            <i class="bi bi-file-pdf me-1"></i>图片转PDF
+                        </a>
+                    </li>
+                </ul>
+            </div>
         </div>
     </nav>
+
+    <!-- 添加一个小间距 -->
+    <div class="mb-3"></div>
 
     <main class="container my-4">
         {% block content %}{% endblock %}

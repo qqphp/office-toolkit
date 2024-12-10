@@ -15,9 +15,14 @@ from reportlab.lib.utils import ImageReader
 
 main_bp = Blueprint('main', __name__)
 
+@main_bp.route('/home')
 @main_bp.route('/')
+def home():
+    return render_template('home.html')
+
+@main_bp.route('/remove-bg')
 def index():
-    return render_template('index.html')
+    return render_template('remove_bg.html')
 
 @main_bp.route('/remove-background', methods=['POST'])
 def process_image():
@@ -226,7 +231,7 @@ def convert_to_pdf():
                 img_width, img_height = img.size
                 aspect = img_height / float(img_width)
                 
-                # A4页面尺寸（单位：点）
+                # A4页面尺寸(单位：点）
                 a4_width, a4_height = A4
                 
                 # 设置图片在页面上的最大宽度（留出边距）
