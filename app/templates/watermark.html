@@ -49,7 +49,10 @@
                     <div class="col-md-6">
                         <label class="form-label">大小</label>
                         <input type="range" class="form-range" id="watermarkSize" 
-                               min="20" max="100" value="50">
+                               min="1" max="50" value="20">
+                        <div class="text-center">
+                            <span id="sizeValue">20%</span>
+                        </div>
                     </div>
                     
                     <div class="col-md-6">
@@ -64,10 +67,11 @@
                     <div class="col-md-6" id="textFontSettings">
                         <label class="form-label">字体选择</label>
                         <select class="form-select" id="watermarkFont">
-                            <option value="arial">Arial</option>
-                            <option value="times">Times New Roman</option>
-                            <option value="microsoft-yahei">微软雅黑</option>
-                            <option value="simhei">黑体</option>
+                            <option value="noto-sans">思源黑体</option>
+                            <option value="noto-serif">思源宋体</option>
+                            <option value="harmony-sans">鸿蒙字体</option>
+                            <option value="lxgw">霞鹜文楷</option>
+                            <option value="source-han">思源黑体 CN</option>
                         </select>
                     </div>
                     

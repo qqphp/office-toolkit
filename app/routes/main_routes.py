@@ -116,21 +116,41 @@ def download_all():
         with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
             for i, path in enumerate(image_paths):
                 # 构建完整的文件系统路径
-                full_path = os.path.join(current_app.root_path, 'static', path.lstrip('/'))
+                full_path = os.path.join(current_app.root_path, 'static', path)
+                
+                # 检查文件是否存在并记录日志
+                current_app.logger.debug(f"Processing file: {full_path}")
+                
                 if os.path.exists(full_path):
-                    # 添加到zip文件
-                    zf.write(full_path, f'watermark_{i+1}.png')
+                    # 获取原始文件名
+                    original_filename = os.path.basename(full_path)
+                    # 添加到zip文件，使用序号和原始文件名
+                    arcname = f'watermark_{i+1}_{original_filename}'
+                    
+                    current_app.logger.debug(f"Adding to zip: {arcname}")
+                    zf.write(full_path, arcname)
+                else:
+                    current_app.logger.warning(f"File not found: {full_path}")
         
         memory_file.seek(0)
         timestamp = time.strftime('%Y%m%d_%H%M%S')
-        return send_file(
+        
+        response = send_file(
             memory_file,
             mimetype='application/zip',
             as_attachment=True,
             download_name=f'watermarks_{timestamp}.zip'
         )
+        
+        # 添加响应头，防止缓存
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        return response
+        
     except Exception as e:
-        current_app.logger.error(f"批量下载失败: {str(e)}")
+        current_app.logger.error(f"批量下载失败: {str(e)}", exc_info=True)
         return jsonify({'error': '打包下载失败'}), 500
 
 @main_bp.route('/convert-pdf')
@@ -186,35 +206,45 @@ def add_watermark():
     
     current_app.logger.debug(f"Received file: {file.filename}")
     
-    # 获取水印设置
-    options = {
-        'type': request.form.get('type', 'text'),
-        'text': request.form.get('text', '无影抠图'),
-        'position': request.form.get('position', 'center'),
-        'opacity': request.form.get('opacity', 50),
-        'size': request.form.get('size', 30)
-    }
-    current_app.logger.debug(f"Watermark options: {options}")
-    
-    watermark_service = WatermarkService()
     try:
-        result_path = watermark_service.add_watermark(file, options)
-        current_app.logger.info(f"Watermark added successfully, result path: {result_path}")
+        # 获取并转换参数
+        options = {
+            'type': request.form.get('type', 'text'),
+            'text': request.form.get('text', '无影抠图'),
+            'position': request.form.get('position', 'center'),
+            'opacity': int(request.form.get('opacity', 50)),
+            'size': int(request.form.get('size', 20)),
+            'font_name': request.form.get('font_name', 'noto-sans'),
+            'color': request.form.get('color', '#000000'),
+            'rotation': float(request.form.get('rotation', 0))
+        }
         
-        # 验证结果文件
-        full_path = os.path.join(current_app.root_path, 'static', result_path)
-        if not os.path.exists(full_path):
-            raise Exception(f"Result file not found at: {full_path}")
-            
+        current_app.logger.debug(f"Processing watermark with options: {options}")
+        
+        # 记录接收到的参数
+        current_app.logger.debug(f"Received parameters: {options}")
+        
+        # 如果是图片水印，添加水印图片
+        if options['type'] == 'image' and 'watermark' in request.files:
+            options['image'] = request.files['watermark']
+        
+        watermark_service = WatermarkService()
+        result_path = watermark_service.add_watermark(file, options)
+        
         return jsonify({
             'success': True,
             'image_url': f'/static/{result_path}'
         })
+        
+    except ValueError as e:
+        current_app.logger.error(f"Invalid parameter: {str(e)}")
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         current_app.logger.error(f"添加水印失败: {str(e)}")
         return jsonify({'error': str(e)}), 500
     finally:
-        watermark_service.cleanup()
+        if 'watermark_service' in locals():
+            watermark_service.cleanup()
 
 def allowed_file(filename):
     return '.' in filename and \

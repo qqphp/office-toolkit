@@ -1,7 +1,7 @@
 // 全局变量
 let selectedFiles = [];
 let currentImageIndex = 0;
-let processedImages = new Map();  // 使用Map存储索引和图片URL的对应关系
+let processedImages = new Map();  // 存储处理后的图片信息
 
 // DOM 加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -22,7 +22,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // 水印设置变更时更新预览
+    // 处理大小滑块的显示
+    const sizeInput = document.getElementById('watermarkSize');
+    if (sizeInput) {
+        sizeInput.addEventListener('input', function(e) {
+            document.getElementById('sizeValue').textContent = `${e.target.value}%`;
+        });
+    }
+    
+    // 监听所有水印设置的变化
     const settingsInputs = document.querySelectorAll('.watermark-settings input, .watermark-settings select');
     settingsInputs.forEach(input => {
         input.addEventListener('change', function() {
@@ -30,6 +38,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 processCurrentImage();
             }
         });
+        
+        // 对于 range 类型的输入，实现实时预览
+        if (input.type === 'range') {
+            input.addEventListener('input', function() {
+                // 更新显示值
+                if (this.id === 'watermarkRotation') {
+                    document.getElementById('rotationValue').textContent = `${this.value}°`;
+                } else if (this.id === 'watermarkSize') {
+                    document.getElementById('sizeValue').textContent = `${this.value}%`;
+                }
+                
+                // 实时处理图片
+                if (selectedFiles.length > 0) {
+                    processCurrentImage();
+                }
+            });
+        }
     });
 });
 
@@ -95,7 +120,7 @@ function handleFiles(files) {
     updateNavigationButtons();
 }
 
-// 显示指定索引的图片
+// 显示指定引的图片
 function showImage(index) {
     if (index < 0 || index >= selectedFiles.length) return;
     
@@ -151,18 +176,22 @@ async function processCurrentImage() {
     const type = document.getElementById('watermarkType').value;
     formData.append('type', type);
     
+    // 添加通用设置 - 移到前面，确保所有类型都会传递这些参数
+    formData.append('position', document.getElementById('watermarkPosition').value);
+    formData.append('opacity', document.getElementById('watermarkOpacity').value);
+    formData.append('size', document.getElementById('watermarkSize').value);
+    formData.append('rotation', document.getElementById('watermarkRotation').value);  // 对所有类型都传递旋转角度
+    
     if (type === 'text') {
         formData.append('text', document.getElementById('watermarkText').value);
+        formData.append('font_name', document.getElementById('watermarkFont').value);
+        formData.append('color', document.getElementById('watermarkColor').value);
     } else {
         const watermarkFile = document.getElementById('watermarkImage').files[0];
         if (watermarkFile) {
             formData.append('watermark', watermarkFile);
         }
     }
-    
-    formData.append('position', document.getElementById('watermarkPosition').value);
-    formData.append('opacity', document.getElementById('watermarkOpacity').value);
-    formData.append('size', document.getElementById('watermarkSize').value);
     
     try {
         const response = await fetch('/add-watermark', {
@@ -174,8 +203,8 @@ async function processCurrentImage() {
         if (data.success) {
             const resultPreview = document.getElementById('resultPreview');
             resultPreview.src = data.image_url;
-            // 保存处理后的图片路径
-            processedImages.set(currentImageIndex, data.image_url);
+            // 保存完整的图片URL
+            processedImages.set(currentImageIndex, data.image_url.replace('/static/', ''));
             updateDownloadButtons();
         } else {
             alert(data.error || '处理失败');
@@ -251,11 +280,10 @@ async function downloadAllImages() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ paths })
+            body: JSON.stringify({ paths: paths })
         });
         
         if (response.ok) {
-            // 创建blob并下载
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
