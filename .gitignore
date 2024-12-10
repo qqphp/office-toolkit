@@ -28,8 +28,8 @@ instance/
 .webassets-cache
 
 # 项目特定文件
-app/static/uploads/*
-!app/static/uploads/.gitkeep
+app/static/uploads/remove_bg/*
+!app/static/uploads/remove_bg/.gitkeep
 app/static/uploads/img_to_pdf/*
 !app/static/uploads/img_to_pdf/.gitkeep
 - app/models/*

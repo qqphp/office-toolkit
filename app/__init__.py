@@ -2,6 +2,7 @@ from flask import Flask, request
 from flask_bootstrap import Bootstrap5
 from config import Config
 from app.config.page_meta import PAGE_META
+import os
 
 bootstrap = Bootstrap5()
 
@@ -14,6 +15,9 @@ def get_page_meta(key):
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    
+    # 确保所需的目录存在
+    os.makedirs(app.config['REMOVE_BG_FOLDER'], exist_ok=True)
     
     # 初始化扩展
     bootstrap.init_app(app)

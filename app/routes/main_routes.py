@@ -191,7 +191,7 @@ def convert_to_pdf():
         return jsonify({'error': '没有选择文件'}), 400
         
     # 创建保存目录
-    save_dir = os.path.join(current_app.root_path, current_app.config['IMG_TO_PDF_FOLDER'])
+    save_dir = current_app.config['IMG_TO_PDF_FOLDER']
     os.makedirs(save_dir, exist_ok=True)
     
     # 保存的文件路径列表

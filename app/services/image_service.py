@@ -40,7 +40,7 @@ def is_portrait_image(image: Image.Image) -> bool:
     if has_face:
         return True
     
-    # 2. ��比例合适且有足够的肤色像素，判定为人像
+    # 2. 比例合适且有足够的肤色像素，判定为人像
     if is_portrait_ratio and has_skin:
         return True
     
@@ -114,7 +114,7 @@ def detect_image_type(image: Image.Image) -> Tuple[str, dict]:
         }
         
     except Exception as e:
-        current_app.logger.warning(f"像��型检测失败: {str(e)}, 使用默认模型")
+        current_app.logger.warning(f"像型检测失败: {str(e)}, 使用默认模型")
         return "u2net", {
             'alpha_matting_foreground_threshold': 250,
             'alpha_matting_background_threshold': 5,
@@ -175,7 +175,7 @@ def remove_background(input_path: str) -> str:
         raise FileNotFoundError(f"模型文件不存在: {model_file}")
     
     output_filename = f"{uuid.uuid4()}.png"
-    output_path = os.path.join(current_app.config['UPLOAD_FOLDER'], output_filename)
+    output_path = os.path.join(current_app.config['REMOVE_BG_FOLDER'], output_filename)
     
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
@@ -228,7 +228,7 @@ def remove_background(input_path: str) -> str:
         )
         
         os.remove(input_path)
-        return f"/static/uploads/{output_filename}"
+        return f"/static/uploads/remove_bg/{output_filename}"
         
     except Exception as e:
         if os.path.exists(input_path):
