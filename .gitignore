@@ -29,8 +29,9 @@ instance/
 
 # 项目特定文件
 app/static/uploads/*
-static/img_to_pdf/*
 !app/static/uploads/.gitkeep
+app/static/uploads/img_to_pdf/*
+!app/static/uploads/img_to_pdf/.gitkeep
 - app/models/*
 - !app/models/.gitkeep
 

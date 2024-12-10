@@ -217,15 +217,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // 修改转换函数
     convertBtn.addEventListener('click', async function() {
         if (selectedFiles.length === 0) {
-            alert('请先选择图片');
+            showDebug('请先选择图片', 'danger');
             return;
         }
         
-        showDebug('正在转换...');
+        showDebug('正在转换...', 'info');
         const formData = new FormData();
+        
+        // 确保正确添加文件
         selectedFiles.forEach((file, index) => {
+            console.log(`Adding file to FormData: ${file.name} (${file.type}), size: ${file.size}`);
             formData.append('images', file);
-            console.log(`Adding file: ${file.name} (${file.type})`);
         });
         
         try {
@@ -234,9 +236,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: formData
             });
             
+            console.log('Response status:', response.status);
+            
             if (response.ok) {
-                showDebug('转换成功，准备下载...');
+                showDebug('转换成功，准备下载...', 'success');
                 const blob = await response.blob();
+                console.log('Received blob:', blob.type, blob.size);
+                
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -245,16 +251,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 a.click();
                 window.URL.revokeObjectURL(url);
                 a.remove();
-                showDebug('下载完成');
+                showDebug('下载完成', 'success');
             } else {
                 const error = await response.json();
-                showDebug(`转换失败: ${error.error || '未知错误'}`);
-                alert(error.error || '转换失败');
+                console.error('Server error:', error);
+                showDebug(`转换失败: ${error.error || '未知错误'}`, 'danger');
             }
         } catch (error) {
-            console.error('Error:', error);
-            showDebug(`发生错误: ${error.message}`);
-            alert('转换过程中发生错误');
+            console.error('Client error:', error);
+            showDebug(`发生错误: ${error.message}`, 'danger');
         }
     });
 }); 

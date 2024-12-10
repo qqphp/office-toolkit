@@ -105,7 +105,7 @@ def download_image():
         
     except Exception as e:
         current_app.logger.error(f"下载图片失败: {str(e)}")
-        return jsonify({'error': '处理图���失败'}), 500
+        return jsonify({'error': '处理图片失败'}), 500
 
 @main_bp.route('/download-all', methods=['POST'])
 def download_all():
@@ -185,10 +185,8 @@ def convert_to_pdf():
         current_app.logger.error("Empty files list")
         return jsonify({'error': '没有选择文件'}), 400
         
-    current_app.logger.info(f"Processing {len(files)} files")
-    
     # 创建保存目录
-    save_dir = os.path.join(current_app.root_path, 'static', 'img_to_pdf')
+    save_dir = os.path.join(current_app.root_path, current_app.config['IMG_TO_PDF_FOLDER'])
     os.makedirs(save_dir, exist_ok=True)
     
     # 保存的文件路径列表
@@ -198,17 +196,20 @@ def convert_to_pdf():
         # 先保存所有图片
         for i, file in enumerate(files):
             if file and allowed_file(file.filename):
-                # 生成唯一文件名
-                original_filename = secure_filename(file.filename)
-                extension = os.path.splitext(original_filename)[1]
-                unique_filename = f"{uuid.uuid4().hex}{extension}"
-                filepath = os.path.join(save_dir, unique_filename)
-                
-                current_app.logger.info(f"Saving file {i+1}: {unique_filename}")
-                file.save(filepath)
-                saved_files.append(filepath)
-                
-                current_app.logger.info(f"File {i+1} saved successfully")
+                try:
+                    # 生成唯一文件名
+                    original_filename = secure_filename(file.filename)
+                    extension = os.path.splitext(original_filename)[1]
+                    unique_filename = f"{uuid.uuid4().hex}{extension}"
+                    filepath = os.path.join(save_dir, unique_filename)
+                    
+                    # 保存文件
+                    file.save(filepath)
+                    saved_files.append(filepath)
+                    
+                except Exception as e:
+                    current_app.logger.error(f"Error saving file {i+1}: {str(e)}")
+                    raise
             else:
                 current_app.logger.warning(f"Invalid file: {file.filename if file else 'None'}")
         
@@ -220,7 +221,6 @@ def convert_to_pdf():
             try:
                 # 读取图片
                 img = Image.open(filepath)
-                current_app.logger.info(f"Processing image {i+1}: {filepath}")
                 
                 # 调整图片大小以适应A4页面
                 img_width, img_height = img.size
@@ -249,7 +249,6 @@ def convert_to_pdf():
                 c.drawImage(ImageReader(img), x, y, width, height)
                 c.showPage()
                 
-                current_app.logger.info(f"Image {i+1} processed successfully")
             except Exception as e:
                 current_app.logger.error(f"Error processing image {i+1}: {str(e)}")
                 raise
@@ -260,7 +259,6 @@ def convert_to_pdf():
         
         c.save()
         output.seek(0)
-        current_app.logger.info("PDF created successfully")
         
         return send_file(
             output,
@@ -271,17 +269,14 @@ def convert_to_pdf():
         
     except Exception as e:
         current_app.logger.error(f"PDF转换失败: {str(e)}", exc_info=True)
-        return jsonify({'error': f'转换失败: {str(e)}'}), 500
-        
-    finally:
-        # 清理临时文件
+        # 发生错误时才清理文件
         for filepath in saved_files:
             try:
                 if os.path.exists(filepath):
                     os.remove(filepath)
-                    current_app.logger.info(f"Cleaned up: {filepath}")
-            except Exception as e:
-                current_app.logger.error(f"Error cleaning up {filepath}: {str(e)}")
+            except Exception as cleanup_error:
+                current_app.logger.error(f"Error cleaning up {filepath}: {str(cleanup_error)}")
+        return jsonify({'error': f'转换失败: {str(e)}'}), 500
 
 def allowed_file(filename):
     return '.' in filename and \
