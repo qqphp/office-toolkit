@@ -1,0 +1,95 @@
+.pdf-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.pdf-upload-area:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.pdf-upload-area.dragover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.selected-images-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.image-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    background-color: #fff;
+}
+
+.image-item:hover {
+    background-color: #f8f9fa;
+}
+
+.image-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 1rem;
+}
+
+.image-item .image-info {
+    flex-grow: 1;
+}
+
+.image-item .image-name {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #212529;
+}
+
+.image-item .image-size {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #6c757d;
+}
+
+.image-item .image-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.image-item .btn-move {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.image-item .btn-remove {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+#debugInfo {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050;
+    min-width: 300px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border: none;
+}
+
+#debugInfo.fade {
+    transition: opacity 0.15s linear;
+}
+
+#debugInfo.fade.show {
+    opacity: 1;
+} 

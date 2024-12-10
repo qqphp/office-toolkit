@@ -9,6 +9,9 @@ from flask import send_file
 import time
 from PIL import Image
 import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.utils import ImageReader
 
 main_bp = Blueprint('main', __name__)
 
@@ -102,7 +105,7 @@ def download_image():
         
     except Exception as e:
         current_app.logger.error(f"下载图片失败: {str(e)}")
-        return jsonify({'error': '处理图片失败'}), 500
+        return jsonify({'error': '处理图���失败'}), 500
 
 @main_bp.route('/download-all', methods=['POST'])
 def download_all():
@@ -166,6 +169,119 @@ def download_all():
     except Exception as e:
         current_app.logger.error(f"打包下载失败: {str(e)}")
         return jsonify({'error': '打包文件失败'}), 500
+
+@main_bp.route('/convert-pdf')
+def convert_pdf():
+    return render_template('convert_pdf.html')
+
+@main_bp.route('/convert-to-pdf', methods=['POST'])
+def convert_to_pdf():
+    if 'images' not in request.files:
+        current_app.logger.error("No files in request")
+        return jsonify({'error': '没有上传文件'}), 400
+        
+    files = request.files.getlist('images')
+    if not files:
+        current_app.logger.error("Empty files list")
+        return jsonify({'error': '没有选择文件'}), 400
+        
+    current_app.logger.info(f"Processing {len(files)} files")
+    
+    # 创建保存目录
+    save_dir = os.path.join(current_app.root_path, 'static', 'img_to_pdf')
+    os.makedirs(save_dir, exist_ok=True)
+    
+    # 保存的文件路径列表
+    saved_files = []
+    
+    try:
+        # 先保存所有图片
+        for i, file in enumerate(files):
+            if file and allowed_file(file.filename):
+                # 生成唯一文件名
+                original_filename = secure_filename(file.filename)
+                extension = os.path.splitext(original_filename)[1]
+                unique_filename = f"{uuid.uuid4().hex}{extension}"
+                filepath = os.path.join(save_dir, unique_filename)
+                
+                current_app.logger.info(f"Saving file {i+1}: {unique_filename}")
+                file.save(filepath)
+                saved_files.append(filepath)
+                
+                current_app.logger.info(f"File {i+1} saved successfully")
+            else:
+                current_app.logger.warning(f"Invalid file: {file.filename if file else 'None'}")
+        
+        # 创建PDF
+        output = io.BytesIO()
+        c = canvas.Canvas(output, pagesize=A4)
+        
+        for i, filepath in enumerate(saved_files):
+            try:
+                # 读取图片
+                img = Image.open(filepath)
+                current_app.logger.info(f"Processing image {i+1}: {filepath}")
+                
+                # 调整图片大小以适应A4页面
+                img_width, img_height = img.size
+                aspect = img_height / float(img_width)
+                
+                # A4页面尺寸（单位：点）
+                a4_width, a4_height = A4
+                
+                # 设置图片在页面上的最大宽度（留出边距）
+                max_width = a4_width - 40  # 左右各留20点边距
+                
+                # 计算等比例缩放后的高度
+                width = max_width
+                height = width * aspect
+                
+                # 如果高度超出页面，则按高度进行缩放
+                if height > (a4_height - 40):  # 上下各留20点边距
+                    height = a4_height - 40
+                    width = height / aspect
+                
+                # 计算居中位置
+                x = (a4_width - width) / 2
+                y = (a4_height - height) / 2
+                
+                # 将图片绘制到PDF页面
+                c.drawImage(ImageReader(img), x, y, width, height)
+                c.showPage()
+                
+                current_app.logger.info(f"Image {i+1} processed successfully")
+            except Exception as e:
+                current_app.logger.error(f"Error processing image {i+1}: {str(e)}")
+                raise
+            finally:
+                # 关闭图片
+                if 'img' in locals():
+                    img.close()
+        
+        c.save()
+        output.seek(0)
+        current_app.logger.info("PDF created successfully")
+        
+        return send_file(
+            output,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name='converted.pdf'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"PDF转换失败: {str(e)}", exc_info=True)
+        return jsonify({'error': f'转换失败: {str(e)}'}), 500
+        
+    finally:
+        # 清理临时文件
+        for filepath in saved_files:
+            try:
+                if os.path.exists(filepath):
+                    os.remove(filepath)
+                    current_app.logger.info(f"Cleaned up: {filepath}")
+            except Exception as e:
+                current_app.logger.error(f"Error cleaning up {filepath}: {str(e)}")
 
 def allowed_file(filename):
     return '.' in filename and \

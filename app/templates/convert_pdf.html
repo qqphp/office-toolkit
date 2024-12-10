@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}无影抠图 图片转PDF工具{% endblock %}
+
+{% block content %}
+<div id="debugInfo" class="alert alert-info alert-dismissible fade d-none" role="alert" data-bs-delay="2000">
+    <span class="message"></span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h2 class="section-title mb-4">图片转PDF工具</h2>
+        <div class="upload-container p-4 border rounded mb-5">
+            <div class="pdf-upload-area" id="pdfDropZone">
+                <i class="bi bi-cloud-upload display-4 mb-3"></i>
+                <p class="mb-3">将图片拖放到这里，或点击上传</p>
+                <input type="file" id="pdfFileInput" class="d-none" accept="image/*" multiple>
+                <button class="btn btn-primary" onclick="document.getElementById('pdfFileInput').click()">
+                    <i class="bi bi-images me-1"></i>选择图片（可多选）
+                </button>
+            </div>
+            
+            <div id="pdfProgressContainer" class="progress-section mt-4 d-none">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-muted">处理进度</h6>
+                        <div class="progress">
+                            <div id="pdfProgressBar" 
+                                 class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%" 
+                                 aria-valuenow="0" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <div id="pdfProgressText" class="text-center mt-2">
+                            <span class="badge bg-primary">准备处理...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="pdfPreviewContainer" class="mt-4 d-none">
+                <div class="card">
+                    <div class="card-header bg-transparent">
+                        <h5 class="mb-0">已选择的图片</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="selected-images-list" id="selectedImagesList">
+                            <!-- 图片列表将通过 JavaScript 动态添加 -->
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button id="convertPdfBtn" class="btn btn-success">
+                            <i class="bi bi-file-pdf me-1"></i>转换为PDF
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pdf.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/pdf.js') }}"></script>
+{% endblock %}
