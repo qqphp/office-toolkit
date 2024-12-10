@@ -4,8 +4,11 @@
 <div class="row justify-content-center">
     <div class="col-md-8 text-center">
         <h2 class="section-title">图片背景透明处理工具</h2>
-        <div class="upload-container p-5 border rounded mb-5">
+        <div class="upload-container p-4 border rounded mb-5">
             <div class="upload-area" id="dropZone">
+                <div class="upload-icon mb-2">
+                    <i class="bi bi-cloud-arrow-up display-4"></i>
+                </div>
                 <p class="mb-3">将图片拖放到这里，或点击上传</p>
                 <input type="file" id="fileInput" class="d-none" accept="image/*" multiple>
                 <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
@@ -306,9 +309,14 @@
                 </div>
             </div>
         </div>
-
-
-
     </div>
 </div>
 {% endblock %} 
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/remove_bg.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/remove_bg.js') }}"></script>
+{% endblock %}

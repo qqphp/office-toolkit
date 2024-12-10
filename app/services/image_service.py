@@ -40,7 +40,7 @@ def is_portrait_image(image: Image.Image) -> bool:
     if has_face:
         return True
     
-    # 2. 如果比例合适且有足够的肤色像素，判定为人像
+    # 2. ��比例合适且有足够的肤色像素，判定为人像
     if is_portrait_ratio and has_skin:
         return True
     
@@ -114,7 +114,7 @@ def detect_image_type(image: Image.Image) -> Tuple[str, dict]:
         }
         
     except Exception as e:
-        current_app.logger.warning(f"图像类型检测失败: {str(e)}, 使用默认模型")
+        current_app.logger.warning(f"像��型检测失败: {str(e)}, 使用默认模型")
         return "u2net", {
             'alpha_matting_foreground_threshold': 250,
             'alpha_matting_background_threshold': 5,
@@ -142,12 +142,37 @@ def remove_background(input_path: str) -> str:
     """
     移除图片背景并保存处理后的图片
     """
-    # 强制使用CPU
+    # 设置环境变量
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-    os.environ['U2NET_HOME'] = current_app.config['U2NET_HOME']
+    
+    # 使用绝对路径并指向u2net子目录
+    # 获取项目根目录的绝对路径
+    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+    u2net_path = os.path.join(root_dir, current_app.config['U2NET_HOME'])
+    os.environ['U2NET_HOME'] = u2net_path
+    
     os.environ['OMP_NUM_THREADS'] = '1'
     os.environ['ONNXRUNTIME_PROVIDER'] = 'CPUExecutionProvider'
     os.environ['ONNXRUNTIME_PROVIDERS'] = '["CPUExecutionProvider"]'
+    
+    # 确保模型目录存在
+    os.makedirs(u2net_path, exist_ok=True)
+    
+    # 检查并修正模型文件名
+    model_map = {
+        'u2net': 'u2net.onnx',
+        'u2netp': 'u2netp.onnx',
+        'u2net_human_seg': 'u2net_human_seg.onnx',
+        'silueta': 'silueta.onnx',
+        'isnet-general-use': 'isnet-general-use.onnx'
+    }
+    
+    # 预先检查所需模型是否存在
+    model_name, _ = detect_image_type(Image.open(input_path))
+    model_file = os.path.join(u2net_path, model_map[model_name])
+    
+    if not os.path.exists(model_file):
+        raise FileNotFoundError(f"模型文件不存在: {model_file}")
     
     output_filename = f"{uuid.uuid4()}.png"
     output_path = os.path.join(current_app.config['UPLOAD_FOLDER'], output_filename)
