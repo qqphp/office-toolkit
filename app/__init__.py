@@ -16,9 +16,6 @@ def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
     
-    # 确保所需的目录存在
-    os.makedirs(app.config['REMOVE_BG_FOLDER'], exist_ok=True)
-    
     # 初始化扩展
     bootstrap.init_app(app)
     

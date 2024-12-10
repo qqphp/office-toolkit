@@ -13,6 +13,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
 from app.services.pdf_service import PDFService
 from app.services.background_service import BackgroundService
+from app.services.watermark_service import WatermarkService
 
 main_bp = Blueprint('main', __name__)
 
@@ -104,66 +105,33 @@ def download_image():
 
 @main_bp.route('/download-all', methods=['POST'])
 def download_all():
-    data = request.get_json()
-    if not data or 'files' not in data:
-        return jsonify({'error': '无效的请求'}), 400
-        
-    files = data['files']
-    bg_color = data.get('background_color', 'transparent')
-    
-    if not files:
-        return jsonify({'error': '没有可下载的文件'}), 400
-        
     try:
-        memory_file = io.BytesIO()
+        # 获取所有处理后的图片路径
+        image_paths = request.json.get('paths', [])
+        if not image_paths:
+            return jsonify({'error': '没有可下载的图片'}), 400
+            
+        # 创建ZIP文件
+        memory_file = BytesIO()
         with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for i, file_url in enumerate(files):
-                # 修正图片路径处理
-                relative_path = file_url.split('/static/')[-1] if '/static/' in file_url else file_url.lstrip('/')
-                image_path = os.path.join(current_app.root_path, 'static', relative_path)
-                
-                if not os.path.exists(image_path):
-                    current_app.logger.warning(f"Skipping non-existent file: {image_path}")
-                    continue
-                    
-                # 打开图片
-                img = Image.open(image_path)
-                
-                # 如果指定了背景颜色且不是透明
-                if bg_color != 'transparent':
-                    background = Image.new('RGBA', img.size, bg_color)
-                    if img.mode == 'RGBA':
-                        background.paste(img, mask=img.split()[3])
-                    else:
-                        background.paste(img)
-                    img = background
-                
-                # 将处理后的图片保存到内存中
-                img_io = io.BytesIO()
-                img.save(img_io, 'PNG', quality=95)
-                img_io.seek(0)
-                
-                # 添加到zip文件
-                timestamp = time.strftime('%Y%m%d_%H%M%S')
-                zf.writestr(f'processed_image_{i+1}_{timestamp}.png', img_io.getvalue())
-
+            for i, path in enumerate(image_paths):
+                # 构建完整的文件系统路径
+                full_path = os.path.join(current_app.root_path, 'static', path.lstrip('/'))
+                if os.path.exists(full_path):
+                    # 添加到zip文件
+                    zf.write(full_path, f'watermark_{i+1}.png')
+        
         memory_file.seek(0)
-        
-        # 生成随机字符串
-        random_str = uuid.uuid4().hex[:8]
-        # 构造下载文件名
-        download_filename = f'wuying_{random_str}.zip'
-        
+        timestamp = time.strftime('%Y%m%d_%H%M%S')
         return send_file(
             memory_file,
             mimetype='application/zip',
             as_attachment=True,
-            download_name=download_filename  # 使用新的文件名格式
+            download_name=f'watermarks_{timestamp}.zip'
         )
-        
     except Exception as e:
-        current_app.logger.error(f"打包下载失败: {str(e)}")
-        return jsonify({'error': '打包文件失败'}), 500
+        current_app.logger.error(f"批量下载失败: {str(e)}")
+        return jsonify({'error': '打包下载失败'}), 500
 
 @main_bp.route('/convert-pdf')
 def convert_pdf():
@@ -196,6 +164,57 @@ def convert_to_pdf():
         return jsonify({'error': f'转换失败: {str(e)}'}), 500
     finally:
         pdf_service.cleanup()
+
+@main_bp.route('/watermark')
+def watermark():
+    return render_template('watermark.html')
+
+@main_bp.route('/add-watermark', methods=['POST'])
+def add_watermark():
+    current_app.logger.debug("Processing watermark request")
+    
+    if 'image' not in request.files:
+        return jsonify({'error': '没有上传文件'}), 400
+        
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': '未选择文件'}), 400
+    
+    # 检查文件类型
+    if not allowed_file(file.filename):
+        return jsonify({'error': '不支持的文件类型'}), 400
+    
+    current_app.logger.debug(f"Received file: {file.filename}")
+    
+    # 获取水印设置
+    options = {
+        'type': request.form.get('type', 'text'),
+        'text': request.form.get('text', '无影抠图'),
+        'position': request.form.get('position', 'center'),
+        'opacity': request.form.get('opacity', 50),
+        'size': request.form.get('size', 30)
+    }
+    current_app.logger.debug(f"Watermark options: {options}")
+    
+    watermark_service = WatermarkService()
+    try:
+        result_path = watermark_service.add_watermark(file, options)
+        current_app.logger.info(f"Watermark added successfully, result path: {result_path}")
+        
+        # 验证结果文件
+        full_path = os.path.join(current_app.root_path, 'static', result_path)
+        if not os.path.exists(full_path):
+            raise Exception(f"Result file not found at: {full_path}")
+            
+        return jsonify({
+            'success': True,
+            'image_url': f'/static/{result_path}'
+        })
+    except Exception as e:
+        current_app.logger.error(f"添加水印失败: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        watermark_service.cleanup()
 
 def allowed_file(filename):
     return '.' in filename and \

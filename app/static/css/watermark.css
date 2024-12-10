@@ -1,0 +1,103 @@
+.watermark-upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.watermark-upload-area:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.watermark-upload-area.dragover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.watermark-settings {
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.watermark-settings .form-label {
+    font-weight: 500;
+    color: #495057;
+}
+
+.watermark-preview {
+    position: relative;
+    min-height: 300px;
+    background-color: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.watermark-preview img {
+    max-width: 100%;
+    height: auto;
+}
+
+.preview-box {
+    min-height: 300px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+.preview-box img {
+    max-width: 100%;
+    height: auto;
+    object-fit: contain;
+}
+
+.selected-images-list {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-top: 1rem;
+}
+
+.image-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    margin-bottom: 0.5rem;
+    background-color: #fff;
+}
+
+.image-item:hover {
+    background-color: #f8f9fa;
+}
+
+.image-item img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    margin-right: 1rem;
+}
+
+.image-item .image-info {
+    flex-grow: 1;
+}
+
+.image-item .image-name {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #212529;
+}
+
+.image-item .image-size {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #6c757d;
+}

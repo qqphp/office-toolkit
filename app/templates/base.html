@@ -44,6 +44,12 @@
                             <i class="bi bi-file-pdf me-1"></i>图片转PDF
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.watermark' }}" 
+                           href="{{ url_for('main.watermark') }}">
+                            <i class="bi bi-image me-1"></i>图片水印
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

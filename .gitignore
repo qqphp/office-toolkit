@@ -32,6 +32,8 @@ app/static/uploads/remove_bg/*
 !app/static/uploads/remove_bg/.gitkeep
 app/static/uploads/img_to_pdf/*
 !app/static/uploads/img_to_pdf/.gitkeep
+app/static/uploads/watermark/*
+!app/static/uploads/watermark/.gitkeep
 - app/models/*
 - !app/models/.gitkeep
 

@@ -7,6 +7,9 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp'}
     
+    # 添加水印目录配置
+    WATERMARK_FOLDER = os.path.join(UPLOAD_FOLDER, 'watermark')
+    
     # 更新模型路径配置
     U2NET_HOME = os.path.join('app', 'models', 'u2net')
     CASCADE_PATH = os.path.join('app', 'models', 'cascades')
