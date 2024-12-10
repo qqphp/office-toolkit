@@ -103,8 +103,8 @@ def download_image():
         current_app.logger.error(f"下载图片失败: {str(e)}")
         return jsonify({'error': '处理图片失败'}), 500
 
-@main_bp.route('/download-all', methods=['POST'])
-def download_all():
+@main_bp.route('/download-all-watermark', methods=['POST'])
+def download_all_watermark():
     try:
         # 获取所有处理后的图片路径
         image_paths = request.json.get('paths', [])
@@ -148,6 +148,89 @@ def download_all():
         response.headers['Expires'] = '0'
         
         return response
+        
+    except Exception as e:
+        current_app.logger.error(f"批量下载失败: {str(e)}", exc_info=True)
+        return jsonify({'error': '打包下载失败'}), 500
+
+@main_bp.route('/download-all-bg', methods=['POST'])
+def download_all_bg():
+    try:
+        # 获取所有处理后的图片路径和背景颜色
+        data = request.json
+        image_paths = data.get('files', [])
+        bg_color = data.get('background_color', 'transparent')
+        
+        if not image_paths:
+            return jsonify({'error': '没有可下载的图片'}), 400
+            
+        # 创建ZIP文件
+        memory_file = BytesIO()
+        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for i, path in enumerate(image_paths):
+                try:
+                    # 从URL中提取相对路径
+                    relative_path = path.split('/static/')[-1] if '/static/' in path else path.lstrip('/')
+                    # 构建完整的文件系统路径
+                    full_path = os.path.join(current_app.root_path, 'static', relative_path)
+                    
+                    # 检查文件是否存在并记录日志
+                    current_app.logger.debug(f"Processing file: {full_path}")
+                    
+                    if not os.path.exists(full_path):
+                        current_app.logger.warning(f"File not found: {full_path}")
+                        continue
+                        
+                    # 打开图片并处理背景颜色
+                    img = Image.open(full_path)
+                    
+                    # 如果指定了背景颜色且不是透明
+                    if bg_color != 'transparent':
+                        # 创建新的图片，使用指定的背景颜色
+                        background = Image.new('RGBA', img.size, bg_color)
+                        # 将原图复制到背景上
+                        if img.mode == 'RGBA':
+                            background.paste(img, mask=img.split()[3])
+                        else:
+                            background.paste(img)
+                        img = background
+                    
+                    # 将处理后的图片保存到内存中
+                    img_buffer = BytesIO()
+                    img.save(img_buffer, format='PNG', quality=95)
+                    img_buffer.seek(0)
+                    
+                    # 获取原始文件名并添加到zip
+                    original_filename = os.path.basename(path)
+                    arcname = f'processed_{i+1}_{original_filename}'
+                    
+                    current_app.logger.debug(f"Adding to zip: {arcname}")
+                    zf.writestr(arcname, img_buffer.getvalue())
+                    
+                except Exception as e:
+                    current_app.logger.error(f"处理图片失败: {str(e)}")
+                    continue
+        
+        # 检查是否有文件被添加到zip中
+        if zf.filelist:
+            memory_file.seek(0)
+            timestamp = time.strftime('%Y%m%d_%H%M%S')
+            
+            response = send_file(
+                memory_file,
+                mimetype='application/zip',
+                as_attachment=True,
+                download_name=f'processed_images_{timestamp}.zip'
+            )
+            
+            # 添加响应头，防止缓存
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+            response.headers['Pragma'] = 'no-cache'
+            response.headers['Expires'] = '0'
+            
+            return response
+        else:
+            return jsonify({'error': '没有成功处理任何图片'}), 400
         
     except Exception as e:
         current_app.logger.error(f"批量下载失败: {str(e)}", exc_info=True)

@@ -275,7 +275,7 @@ async function downloadAllImages() {
             return;
         }
         
-        const response = await fetch('/download-all', {
+        const response = await fetch('/download-all-watermark', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'

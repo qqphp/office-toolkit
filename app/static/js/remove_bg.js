@@ -300,7 +300,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     return;
                 }
 
-                const response = await fetch('/download-all', {
+                const response = await fetch('/download-all-bg', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
