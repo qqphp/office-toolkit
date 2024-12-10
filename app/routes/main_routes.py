@@ -1,6 +1,5 @@
 from flask import Blueprint, render_template, request, jsonify, current_app
 from werkzeug.utils import secure_filename
-from app.services.image_service import remove_background
 import os
 import uuid
 import zipfile
@@ -12,6 +11,8 @@ import io
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.utils import ImageReader
+from app.services.pdf_service import PDFService
+from app.services.background_service import BackgroundService
 
 main_bp = Blueprint('main', __name__)
 
@@ -32,32 +33,21 @@ def process_image():
     file = request.files['image']
     if file.filename == '':
         return jsonify({'error': '未选择文件'}), 400
-        
-    if file and allowed_file(file.filename):
-        filename = secure_filename(file.filename)
-        # 生成唯一文件名避免冲突
-        unique_filename = f"{uuid.uuid4()}_{filename}"
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_filename)
-        
-        # 确保上传目录存在
-        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        
-        file.save(filepath)
-        
-        try:
-            result_path = remove_background(filepath)
-            return jsonify({
-                'success': True,
-                'image_url': result_path
-            })
-        except Exception as e:
-            # 清理临时文件
-            if os.path.exists(filepath):
-                os.remove(filepath)
-            current_app.logger.error(f"处理图片失败: {str(e)}")
-            return jsonify({'error': str(e)}), 500
-            
-    return jsonify({'error': '不支持的文件类型'}), 400
+    
+    bg_service = BackgroundService()
+    try:
+        result_path = bg_service.process_image(file)
+        return jsonify({
+            'success': True,
+            'image_url': result_path
+        })
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        current_app.logger.error(f"处理图片失败: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        bg_service.cleanup()
 
 @main_bp.route('/download-image', methods=['POST'])
 def download_image():
@@ -189,99 +179,23 @@ def convert_to_pdf():
     if not files:
         current_app.logger.error("Empty files list")
         return jsonify({'error': '没有选择文件'}), 400
-        
-    # 创建保存目录
-    save_dir = current_app.config['IMG_TO_PDF_FOLDER']
-    os.makedirs(save_dir, exist_ok=True)
     
-    # 保存的文件路径列表
-    saved_files = []
-    
+    pdf_service = PDFService()
     try:
-        # 先保存所有图片
-        for i, file in enumerate(files):
-            if file and allowed_file(file.filename):
-                try:
-                    # 生成唯一文件名
-                    original_filename = secure_filename(file.filename)
-                    extension = os.path.splitext(original_filename)[1]
-                    unique_filename = f"{uuid.uuid4().hex}{extension}"
-                    filepath = os.path.join(save_dir, unique_filename)
-                    
-                    # 保存文件
-                    file.save(filepath)
-                    saved_files.append(filepath)
-                    
-                except Exception as e:
-                    current_app.logger.error(f"Error saving file {i+1}: {str(e)}")
-                    raise
-            else:
-                current_app.logger.warning(f"Invalid file: {file.filename if file else 'None'}")
-        
-        # 创建PDF
-        output = io.BytesIO()
-        c = canvas.Canvas(output, pagesize=A4)
-        
-        for i, filepath in enumerate(saved_files):
-            try:
-                # 读取图片
-                img = Image.open(filepath)
-                
-                # 调整图片大小以适应A4页面
-                img_width, img_height = img.size
-                aspect = img_height / float(img_width)
-                
-                # A4页面尺寸(单位：点）
-                a4_width, a4_height = A4
-                
-                # 设置图片在页面上的最大宽度（留出边距）
-                max_width = a4_width - 40  # 左右各留20点边距
-                
-                # 计算等比例缩放后的高度
-                width = max_width
-                height = width * aspect
-                
-                # 如果高度超出页面，则按高度进行缩放
-                if height > (a4_height - 40):  # 上下各留20点边距
-                    height = a4_height - 40
-                    width = height / aspect
-                
-                # 计算居中位置
-                x = (a4_width - width) / 2
-                y = (a4_height - height) / 2
-                
-                # 将图片绘制到PDF页面
-                c.drawImage(ImageReader(img), x, y, width, height)
-                c.showPage()
-                
-            except Exception as e:
-                current_app.logger.error(f"Error processing image {i+1}: {str(e)}")
-                raise
-            finally:
-                # 关闭图片
-                if 'img' in locals():
-                    img.close()
-        
-        c.save()
-        output.seek(0)
-        
+        output = pdf_service.convert_images_to_pdf(files)
         return send_file(
             output,
             mimetype='application/pdf',
             as_attachment=True,
             download_name='converted.pdf'
         )
-        
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
     except Exception as e:
         current_app.logger.error(f"PDF转换失败: {str(e)}", exc_info=True)
-        # 发生错误时才清理文件
-        for filepath in saved_files:
-            try:
-                if os.path.exists(filepath):
-                    os.remove(filepath)
-            except Exception as cleanup_error:
-                current_app.logger.error(f"Error cleaning up {filepath}: {str(cleanup_error)}")
         return jsonify({'error': f'转换失败: {str(e)}'}), 500
+    finally:
+        pdf_service.cleanup()
 
 def allowed_file(filename):
     return '.' in filename and \
