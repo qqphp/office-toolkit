@@ -80,6 +80,11 @@ async function handleFiles(files) {
     showImage(0);
     document.getElementById('previewContainer').classList.remove('d-none');
     updateNavigationButtons();
+    
+    // 处理完所有文件后
+    if (files.length > 1) {
+        document.getElementById('downloadAllBtn').classList.remove('d-none');
+    }
 }
 
 // 处理单个图片
@@ -231,4 +236,41 @@ function formatFileSize(bytes) {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-} 
+}
+
+// 在现有代码后添加批量下载功能
+async function downloadAllImages() {
+    if (!processedImages.length) return;
+    
+    try {
+        const response = await fetch('/download-all-compressed', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: processedImages
+            })
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `compressed_images_${Date.now()}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        } else {
+            throw new Error('下载失败');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('批量下载失败');
+    }
+}
+
+// 添加批量下载按钮事件监听
+document.getElementById('downloadAllBtn').addEventListener('click', downloadAllImages); 
