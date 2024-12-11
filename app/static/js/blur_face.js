@@ -78,7 +78,15 @@ function handleFiles(files) {
 // 处理单张图片
 function processImage(index) {
     if (index >= selectedFiles.length) {
+        // 处理完成后更新进度条和提示信息
+        updateProgress(100, `已完成 ${selectedFiles.length} 张图片处理`);
+        // 显示下载按钮
         document.getElementById('downloadAllBtn').classList.remove('d-none');
+        // 将进度条变为成功状态
+        const progressBar = document.getElementById('progressBar');
+        progressBar.classList.remove('progress-bar-animated');
+        progressBar.classList.remove('progress-bar-striped');
+        progressBar.classList.add('bg-success');
         return;
     }
     
@@ -114,7 +122,12 @@ function processImage(index) {
     .catch(error => {
         console.error('Error:', error);
         showToast(error.message, 'danger');
-        updateProgress(0, '处理失败');
+        // 处理失败时更新进度条状态
+        const progressBar = document.getElementById('progressBar');
+        progressBar.classList.remove('progress-bar-animated');
+        progressBar.classList.remove('progress-bar-striped');
+        progressBar.classList.add('bg-danger');
+        updateProgress(progress, `处理失败: ${error.message}`);
     });
 }
 
@@ -140,7 +153,13 @@ function updateProgress(progress, text) {
     
     progressBar.style.width = `${progress}%`;
     progressBar.setAttribute('aria-valuenow', progress);
-    progressText.innerHTML = `<span class="badge bg-primary">${text}</span>`;
+    
+    // 根据进度更新徽章颜色
+    const badgeClass = progress === 100 ? 'bg-success' : 
+                      progress === 0 ? 'bg-danger' : 
+                      'bg-primary';
+    
+    progressText.innerHTML = `<span class="badge ${badgeClass}">${text}</span>`;
 }
 
 // 导航功能
