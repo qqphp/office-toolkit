@@ -11,27 +11,13 @@ from typing import List, Tuple
 
 class PDFService:
     def __init__(self):
-        self.save_dir = current_app.config['IMG_TO_PDF_FOLDER']
-        self.saved_files: List[str] = []
+        self.save_dir = os.path.join(current_app.root_path, 'static', 'uploads', 'img_to_pdf')
+        self.pdf_path = None
         
     def _allowed_file(self, filename: str) -> bool:
         return '.' in filename and \
                filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS']
     
-    def _save_image(self, file, index: int) -> str:
-        """保存上传的图片文件"""
-        if not file or not self._allowed_file(file.filename):
-            current_app.logger.warning(f"Invalid file: {file.filename if file else 'None'}")
-            raise ValueError(f"Invalid file format for file {index + 1}")
-            
-        original_filename = secure_filename(file.filename)
-        extension = os.path.splitext(original_filename)[1]
-        unique_filename = f"{uuid.uuid4().hex}{extension}"
-        filepath = os.path.join(self.save_dir, unique_filename)
-        
-        file.save(filepath)
-        return filepath
-        
     def _calculate_image_dimensions(self, img: Image.Image) -> Tuple[float, float, float, float]:
         """计算图片在PDF页面中的尺寸和位置"""
         img_width, img_height = img.size
@@ -58,51 +44,72 @@ class PDFService:
         
         return width, height, x, y
     
-    def convert_images_to_pdf(self, files) -> io.BytesIO:
-        """将图片文件转换为PDF"""
+    def convert_images_to_pdf(self, files) -> str:
+        """将图片文件转换为PDF，不保存原始图片，返回生成的PDF文件路径"""
         try:
-            # 确保保存目录存在
-            os.makedirs(self.save_dir, exist_ok=True)
-            
-            # 保存所有图片
-            for i, file in enumerate(files):
-                try:
-                    filepath = self._save_image(file, i)
-                    self.saved_files.append(filepath)
-                except Exception as e:
-                    current_app.logger.error(f"Error saving file {i+1}: {str(e)}")
-                    raise
-            
             # 创建PDF
             output = io.BytesIO()
             c = canvas.Canvas(output, pagesize=A4)
             
-            # 处理每个图片
-            for i, filepath in enumerate(self.saved_files):
+            # 直接处理每个图片
+            for i, file in enumerate(files):
                 try:
-                    with Image.open(filepath) as img:
-                        # 计算尺寸和位置
-                        width, height, x, y = self._calculate_image_dimensions(img)
-                        # 将图片绘制到PDF页面
-                        c.drawImage(ImageReader(img), x, y, width, height)
-                        c.showPage()
+                    if not file or not self._allowed_file(file.filename):
+                        raise ValueError(f"Invalid file format for file {i + 1}")
+                    
+                    # 直接从内存中读取图片
+                    img_data = file.read()
+                    img = Image.open(io.BytesIO(img_data))
+                    
+                    # 计算尺寸和位置
+                    width, height, x, y = self._calculate_image_dimensions(img)
+                    
+                    # 将图片转换为可用于PDF的格式
+                    img_buffer = io.BytesIO()
+                    if img.mode == 'RGBA':
+                        # 转换RGBA为RGB
+                        bg = Image.new('RGB', img.size, (255, 255, 255))
+                        bg.paste(img, mask=img.split()[3])
+                        bg.save(img_buffer, format='JPEG')
+                    else:
+                        img.convert('RGB').save(img_buffer, format='JPEG')
+                    
+                    img_buffer.seek(0)
+                    
+                    # 将图片绘制到PDF页面
+                    c.drawImage(ImageReader(img_buffer), x, y, width, height)
+                    c.showPage()
+                    
                 except Exception as e:
                     current_app.logger.error(f"Error processing image {i+1}: {str(e)}")
                     raise
-            
+                
             c.save()
             output.seek(0)
-            return output
+            
+            # 确保目录存在
+            os.makedirs(self.save_dir, exist_ok=True)
+            
+            # 生成唯一文件名并保存PDF
+            filename = f"converted_{uuid.uuid4().hex}.pdf"
+            pdf_path = os.path.join(self.save_dir, filename)
+            
+            # 记录日志
+            current_app.logger.debug(f"Saving PDF to: {pdf_path}")
+            
+            with open(pdf_path, 'wb') as f:
+                f.write(output.getvalue())
+            
+            # 验证文件是否成功创建
+            if not os.path.exists(pdf_path):
+                raise FileNotFoundError(f"Failed to create PDF file at {pdf_path}")
+            
+            return pdf_path
             
         except Exception as e:
-            self.cleanup()
+            current_app.logger.error(f"PDF conversion failed: {str(e)}")
             raise e
     
     def cleanup(self):
-        """清理临时文件"""
-        for filepath in self.saved_files:
-            try:
-                if os.path.exists(filepath):
-                    os.remove(filepath)
-            except Exception as cleanup_error:
-                current_app.logger.error(f"Error cleaning up {filepath}: {str(cleanup_error)}") 
+        """清理方法保留为空，不再自动删除文件"""
+        pass

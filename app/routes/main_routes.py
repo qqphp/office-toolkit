@@ -253,9 +253,9 @@ def convert_to_pdf():
     
     pdf_service = PDFService()
     try:
-        output = pdf_service.convert_images_to_pdf(files)
+        pdf_path = pdf_service.convert_images_to_pdf(files)
         return send_file(
-            output,
+            pdf_path,
             mimetype='application/pdf',
             as_attachment=True,
             download_name='converted.pdf'
@@ -265,8 +265,6 @@ def convert_to_pdf():
     except Exception as e:
         current_app.logger.error(f"PDF转换失败: {str(e)}", exc_info=True)
         return jsonify({'error': f'转换失败: {str(e)}'}), 500
-    finally:
-        pdf_service.cleanup()
 
 @main_bp.route('/watermark')
 def watermark():
