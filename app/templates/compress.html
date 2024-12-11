@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/compress.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 text-center">
+        <h2 class="section-title">图片压缩工具</h2>
+        <div class="upload-container p-4 border rounded mb-5">
+            <div class="upload-area" id="dropZone">
+                <i class="bi bi-cloud-arrow-up display-4"></i>
+                <p class="mb-3">将图片拖放到这里，或点击上传</p>
+                <input type="file" id="fileInput" class="d-none" accept="image/*" multiple>
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    <i class="bi bi-images me-1"></i>选择图片（可多选）
+                </button>
+            </div>
+            
+            <!-- 压缩设置 -->
+            <div class="compression-settings mt-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">压缩设置</h5>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label for="quality" class="form-label">压缩质量</label>
+                                <div class="input-group">
+                                    <input type="range" class="form-range" id="quality" min="1" max="100" value="80">
+                                    <span id="qualityValue" class="ms-2">80%</span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="maxWidth" class="form-label">最大宽度</label>
+                                <input type="number" class="form-control" id="maxWidth" value="1920">
+                            </div>
+                            <div class="col-md-4">
+                                <label for="maxHeight" class="form-label">最大高度</label>
+                                <input type="number" class="form-control" id="maxHeight" value="1080">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 进度条 -->
+            <div id="progressContainer" class="progress-section mt-4 d-none">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-3 text-muted">处理进度</h6>
+                        <div class="progress">
+                            <div id="progressBar" 
+                                 class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%" 
+                                 aria-valuenow="0" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                            </div>
+                        </div>
+                        <div id="progressText" class="text-center mt-2">
+                            <span class="badge bg-primary">准备处理...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 预览区域 -->
+        <div id="previewContainer" class="mt-4 d-none">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-transparent">
+                            <h5 class="mb-0">原图</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="preview-box original-preview"></div>
+                            <div class="image-info mt-2">
+                                <p class="original-size mb-0"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100">
+                        <div class="card-header bg-transparent">
+                            <h5 class="mb-0">压缩后</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="preview-box compressed-preview"></div>
+                            <div class="image-info mt-2">
+                                <p class="compressed-size mb-0"></p>
+                                <p class="compression-ratio mb-0"></p>
+                            </div>
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <button id="downloadBtn" class="btn btn-success">
+                                <i class="bi bi-download me-1"></i>下载图片
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 图片导航 -->
+            <div class="image-navigation mt-3 d-none">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-outline-primary" onclick="showPreviousImage()" id="prevButton">
+                        <i class="bi bi-chevron-left"></i> 上一张
+                    </button>
+                    <span id="imageCounter" class="text-muted">1/1</span>
+                    <button class="btn btn-outline-primary" onclick="showNextImage()" id="nextButton">
+                        下一张 <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/compress.js') }}"></script>
+{% endblock %} 

@@ -1,0 +1,62 @@
+.upload-container {
+    border-radius: 8px;
+}
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.upload-area.dragover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+.preview-box {
+    min-height: 300px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+.preview-box img {
+    max-width: 100%;
+    max-height: 280px;
+    object-fit: contain;
+}
+
+.compression-settings .form-range {
+    width: 80%;
+}
+
+.image-info {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.compression-ratio {
+    color: #198754;
+    font-weight: 500;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .preview-box {
+        min-height: 200px;
+    }
+    
+    .preview-box img {
+        max-height: 180px;
+    }
+} 

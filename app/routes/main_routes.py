@@ -14,6 +14,7 @@ from reportlab.lib.utils import ImageReader
 from app.services.pdf_service import PDFService
 from app.services.background_service import BackgroundService
 from app.services.watermark_service import WatermarkService
+from app.services.compress_service import CompressService
 
 main_bp = Blueprint('main', __name__)
 
@@ -330,3 +331,63 @@ def add_watermark():
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in current_app.config['ALLOWED_EXTENSIONS'] 
+
+@main_bp.route('/compress')
+def compress():
+    return render_template('compress.html')
+
+@main_bp.route('/compress-image', methods=['POST'])
+def process_compress():
+    if 'image' not in request.files:
+        return jsonify({'error': '没有上传文件'}), 400
+        
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': '未选择文件'}), 400
+    
+    compress_service = CompressService()
+    try:
+        # 获取压缩参数
+        quality = request.form.get('quality', type=int, default=80)
+        max_width = request.form.get('max_width', type=int, default=1920)
+        max_height = request.form.get('max_height', type=int, default=1080)
+        
+        result_path = compress_service.process_image(file, quality, max_width, max_height)
+        return jsonify({
+            'success': True,
+            'image_url': result_path
+        })
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        current_app.logger.error(f"压缩图片失败: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        compress_service.cleanup()
+
+@main_bp.route('/download-compressed', methods=['POST'])
+def download_compressed():
+    data = request.get_json()
+    if not data or 'image_url' not in data:
+        return jsonify({'error': '无效的请求'}), 400
+        
+    try:
+        # 从 URL 中提取相对路径
+        relative_path = data['image_url'].split('/static/')[-1] if '/static/' in data['image_url'] else data['image_url'].lstrip('/')
+        # 构建完整的文件系统路径
+        image_path = os.path.join(current_app.root_path, 'static', relative_path)
+        
+        if not os.path.exists(image_path):
+            return jsonify({'error': '图片不存在'}), 404
+            
+        timestamp = time.strftime('%Y%m%d_%H%M%S')
+        return send_file(
+            image_path,
+            mimetype='image/jpeg',
+            as_attachment=True,
+            download_name=f'compressed_image_{timestamp}.jpg'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"下载压缩图片失败: {str(e)}")
+        return jsonify({'error': '下载失败'}), 500

@@ -13,4 +13,9 @@ class Config:
     # 更新模型路径配置
     U2NET_HOME = os.path.join('app', 'models', 'u2net')
     CASCADE_PATH = os.path.join('app', 'models', 'cascades')
+
+    # 图片转pdf目录配置
     IMG_TO_PDF_FOLDER = os.path.join(UPLOAD_FOLDER, 'img_to_pdf')
+
+    # 图片压缩目录配置
+    IMG_COMPRESS_FOLDER = os.path.join(UPLOAD_FOLDER, 'compress')
