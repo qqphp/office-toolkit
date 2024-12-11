@@ -22,23 +22,39 @@
             <div class="compression-settings mt-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5 class="card-title">压缩设置</h5>
+                        <h5 class="card-title mb-4">压缩设置</h5>
                         <div class="row g-3">
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="quality" class="form-label">压缩质量</label>
                                 <div class="input-group">
                                     <input type="range" class="form-range" id="quality" min="1" max="100" value="80">
                                     <span id="qualityValue" class="ms-2">80%</span>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
+                                <div class="form-check d-flex align-items-center gap-2">
+                                    <input class="form-check-input" type="checkbox" id="keepAspectRatio" checked>
+                                    <label class="form-check-label" for="keepAspectRatio">
+                                        维持宽高比
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
                                 <label for="maxWidth" class="form-label">最大宽度</label>
-                                <input type="number" class="form-control" id="maxWidth" value="1920">
+                                <input type="number" class="form-control" id="maxWidth" value="1920" min="100" max="7680" disabled>
+                                <div class="form-text">100-7680px</div>
                             </div>
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label for="maxHeight" class="form-label">最大高度</label>
-                                <input type="number" class="form-control" id="maxHeight" value="1080">
+                                <input type="number" class="form-control" id="maxHeight" value="1080" min="100" max="4320" disabled>
+                                <div class="form-text">100-4320px</div>
                             </div>
+                        </div>
+                        <div class="mt-4 text-muted border-top pt-3">
+                            <i class="bi bi-info-circle me-1"></i>
+                            <small>调整压缩参数后，需要重新上传图片才能生效</small>
                         </div>
                     </div>
                 </div>

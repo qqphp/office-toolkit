@@ -1,3 +1,22 @@
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.section-subtitle {
+    font-size: 1.125rem;
+    color: #6b7280;
+    margin-bottom: 0;
+    line-height: 1.6;
+}
+
 .watermark-upload-area {
     border: 2px dashed #dee2e6;
     border-radius: 4px;

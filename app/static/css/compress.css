@@ -1,3 +1,23 @@
+
+.section-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1a1a1a;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.section-subtitle {
+    font-size: 1.125rem;
+    color: #6b7280;
+    margin-bottom: 0;
+    line-height: 1.6;
+}
+
+/* 图片压缩页面样式 */
 .upload-container {
     border-radius: 8px;
 }
@@ -37,7 +57,7 @@
 }
 
 .compression-settings .form-range {
-    width: 80%;
+    width: 85%;
 }
 
 .image-info {
@@ -59,4 +79,38 @@
     .preview-box img {
         max-height: 180px;
     }
+} 
+
+.compression-settings .input-group {
+    align-items: center;
+}
+
+.compression-settings #qualityValue {
+    min-width: 45px;
+    text-align: right;
+}
+
+.compression-settings .form-check {
+    display: flex;
+    align-items: center;
+    height: 100%;
+}
+
+.compression-settings .form-check-input {
+    margin-top: 0;
+    margin-right: 0;
+}
+
+.compression-settings .form-check-label {
+    margin-left: 0;
+}
+
+.compression-settings .form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.compression-settings .card-body {
+    padding: 1.5rem;
 } 

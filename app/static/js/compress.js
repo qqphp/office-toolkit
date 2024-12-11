@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeDropZone();
     initializeQualitySlider();
     initializeFileInput();
+    initializeAspectRatioControl();
 });
 
 // 初始化拖放区域
@@ -44,6 +45,39 @@ function initializeFileInput() {
     fileInput.addEventListener('change', function() {
         handleFiles(this.files);
     });
+}
+
+// 添加宽高比控制初始化
+function initializeAspectRatioControl() {
+    const keepAspectRatio = document.getElementById('keepAspectRatio');
+    const maxWidth = document.getElementById('maxWidth');
+    const maxHeight = document.getElementById('maxHeight');
+    
+    // 监听复选框变化
+    keepAspectRatio.addEventListener('change', function() {
+        maxWidth.disabled = this.checked;
+        maxHeight.disabled = this.checked;
+    });
+    
+    // 监听输入值变化
+    maxWidth.addEventListener('input', function() {
+        validateDimension(this, 100, 7680);
+    });
+    
+    maxHeight.addEventListener('input', function() {
+        validateDimension(this, 100, 4320);
+    });
+}
+
+// 验证尺寸输入
+function validateDimension(input, min, max) {
+    let value = parseInt(input.value);
+    if (isNaN(value)) {
+        value = min;
+    } else {
+        value = Math.max(min, Math.min(max, value));
+    }
+    input.value = value;
 }
 
 // 处理文件
@@ -87,13 +121,22 @@ async function handleFiles(files) {
     }
 }
 
-// 处理单个图片
+// 修改处理图片函数，考虑宽高比设置
 async function processImage(file) {
     const formData = new FormData();
     formData.append('image', file);
     formData.append('quality', document.getElementById('quality').value);
-    formData.append('max_width', document.getElementById('maxWidth').value);
-    formData.append('max_height', document.getElementById('maxHeight').value);
+    
+    const keepAspectRatio = document.getElementById('keepAspectRatio').checked;
+    if (keepAspectRatio) {
+        // 如果保持宽高比，使用默认的最大尺寸
+        formData.append('max_width', 1920);
+        formData.append('max_height', 1080);
+    } else {
+        // 如果不保持宽高比，使用用户输入的值
+        formData.append('max_width', document.getElementById('maxWidth').value);
+        formData.append('max_height', document.getElementById('maxHeight').value);
+    }
     
     try {
         const response = await fetch('/compress-image', {
