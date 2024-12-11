@@ -169,6 +169,13 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/watermark.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
+<!-- 字体预加载 -->
+<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/NotoSansSC-Regular.ttf') }}" crossorigin>
+<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/NotoSerifSC-Regular.ttf') }}" crossorigin>
+<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/HarmonyOS_Sans_SC_Regular.ttf') }}" crossorigin>
+<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/LXGWWenKai-Regular.ttf') }}" crossorigin>
+<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/SourceHanSansCN-Regular.otf') }}" crossorigin>
 {% endblock %}
 
 {% block extra_js %}
