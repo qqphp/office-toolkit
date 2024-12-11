@@ -26,7 +26,7 @@ class WatermarkService:
         current_app.logger.debug(f"Upload folder path: {self.upload_folder}")
         current_app.logger.debug(f"Fonts folder path: {self.fonts_folder}")
         
-        # 检查字体���件是否存在
+        # 检查字体文件是否存在
         for font_name, font_file in self.font_map.items():
             font_path = os.path.join(self.fonts_folder, font_file)
             if not os.path.exists(font_path):
