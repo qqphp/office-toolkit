@@ -57,6 +57,12 @@
                             <i class="bi bi-file-zip me-1"></i>图片压缩
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'main.blur_face' }}" 
+                           href="{{ url_for('main.blur_face') }}">
+                            <i class="bi bi-person-bounding-box me-1"></i>模糊面部
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

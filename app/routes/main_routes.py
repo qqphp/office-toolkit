@@ -15,6 +15,7 @@ from app.services.pdf_service import PDFService
 from app.services.background_service import BackgroundService
 from app.services.watermark_service import WatermarkService
 from app.services.compress_service import CompressService
+from app.services.blur_face_service import BlurFaceService
 
 main_bp = Blueprint('main', __name__)
 
@@ -231,7 +232,7 @@ def download_all_bg():
             
             return response
         else:
-            return jsonify({'error': '没有成功处理任何���片'}), 400
+            return jsonify({'error': '没有成功处理任何图片'}), 400
         
     except Exception as e:
         current_app.logger.error(f"批量下载失败: {str(e)}", exc_info=True)
@@ -303,7 +304,7 @@ def add_watermark():
         
         current_app.logger.debug(f"Processing watermark with options: {options}")
         
-        # 记录接收到的参数
+        # 记录接收到的参��
         current_app.logger.debug(f"Received parameters: {options}")
         
         # 如果是图片水印，添加水印图片
@@ -454,3 +455,31 @@ def download_all_compressed():
     except Exception as e:
         current_app.logger.error(f"批量下载失败: {str(e)}", exc_info=True)
         return jsonify({'error': '打包下载失败'}), 500
+
+@main_bp.route('/blur-face')
+def blur_face():
+    return render_template('blur_face.html')
+
+@main_bp.route('/api/blur-face', methods=['POST'])
+def process_blur_face():
+    if 'image' not in request.files:
+        return jsonify({'error': '没有上传文件'}), 400
+        
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': '未选择文件'}), 400
+    
+    blur_service = BlurFaceService()
+    try:
+        result_path = blur_service.process_image(file)
+        return jsonify({
+            'success': True,
+            'image_url': result_path
+        })
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        current_app.logger.error(f"处理图片失败: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+    finally:
+        blur_service.cleanup()

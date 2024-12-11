@@ -19,3 +19,6 @@ class Config:
 
     # 图片压缩目录配置
     IMG_COMPRESS_FOLDER = os.path.join(UPLOAD_FOLDER, 'compress')
+
+    # 模糊面部目录配置
+    BLUR_FACE_FOLDER = os.path.join(UPLOAD_FOLDER, 'blur_face')

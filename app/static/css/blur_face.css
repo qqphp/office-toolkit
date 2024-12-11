@@ -1,0 +1,39 @@
+/* 继承通用上传区域样式 */
+.upload-container {
+    border-radius: 8px;
+}
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.upload-area.dragover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* 预览容器样式 */
+.preview-box {
+    min-height: 300px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+}
+
+.preview-box img {
+    max-height: 300px;
+    object-fit: contain;
+    border-radius: 4px;
+} 
