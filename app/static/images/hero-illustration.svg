@@ -1,0 +1,47 @@
+<svg width="600" height="400" viewBox="0 0 600 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- 背景装饰圆形 -->
+    <circle cx="500" cy="100" r="80" fill="#ffffff" fill-opacity="0.1"/>
+    <circle cx="100" cy="300" r="60" fill="#ffffff" fill-opacity="0.1"/>
+    
+    <!-- 主图片框 -->
+    <rect x="150" y="80" width="300" height="240" rx="12" fill="#ffffff"/>
+    <rect x="170" y="100" width="260" height="180" rx="8" fill="#E3F2FD"/>
+    
+    <!-- 图片处理效果示意 -->
+    <g transform="translate(170, 100)">
+        <!-- 透明背景示意 -->
+        <path d="M0 8C0 3.58172 3.58172 0 8 0H252C256.418 0 260 3.58172 260 8V180H0V8Z" fill="#E3F2FD"/>
+        <path d="M130 60C147.673 60 162 74.327 162 92C162 109.673 147.673 124 130 124C112.327 124 98 109.673 98 92C98 74.327 112.327 60 130 60Z" fill="#90CAF9"/>
+        
+        <!-- 处理工具图标 -->
+        <g transform="translate(20, 20)">
+            <rect width="40" height="40" rx="8" fill="#1976D2" fill-opacity="0.8"/>
+            <path d="M12 20H28M20 12V28" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </g>
+        
+        <!-- 处理效果示意线 -->
+        <path d="M40 150L220 150" stroke="#1976D2" stroke-width="2" stroke-dasharray="4 4"/>
+        <path d="M40 160L220 160" stroke="#1976D2" stroke-width="2" stroke-dasharray="4 4"/>
+    </g>
+    
+    <!-- 浮动装饰元素 -->
+    <g transform="translate(480, 200)">
+        <rect width="60" height="60" rx="12" fill="#ffffff" fill-opacity="0.2"/>
+        <path d="M15 30H45M30 15V45" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+    </g>
+    
+    <g transform="translate(60, 160)">
+        <rect width="40" height="40" rx="8" fill="#ffffff" fill-opacity="0.2"/>
+        <path d="M10 20H30M20 10V30" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    
+    <!-- 动态效果装饰线 -->
+    <path d="M460 120C480 120 490 140 510 140" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    <path d="M80 280C100 280 110 300 130 300" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    
+    <!-- 图片处理工具图标 -->
+    <g transform="translate(400, 300)">
+        <circle cx="20" cy="20" r="20" fill="#ffffff" fill-opacity="0.2"/>
+        <path d="M13 20H27M20 13V27" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+    </g>
+</svg> 

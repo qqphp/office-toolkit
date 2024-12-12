@@ -293,7 +293,7 @@ def add_watermark():
         # 获取并转换参数
         options = {
             'type': request.form.get('type', 'text'),
-            'text': request.form.get('text', '青石图片工具箱'),
+            'text': request.form.get('text', '图优助手'),
             'position': request.form.get('position', 'center'),
             'opacity': int(request.form.get('opacity', 50)),
             'size': int(request.form.get('size', 20)),
