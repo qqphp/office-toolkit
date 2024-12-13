@@ -3,7 +3,7 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/crop.css') }}">
 <!-- 添加 Cropper.js 的 CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cropper.min.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -151,7 +151,7 @@
 
 {% block extra_js %}
 <!-- 添加 Cropper.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+<script src="{{ url_for('static', filename='js/cropper.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/jszip.min.js') }}"></script>
 <script src="{{ url_for('static', filename='js/crop.js') }}"></script>
 {% endblock %} 
