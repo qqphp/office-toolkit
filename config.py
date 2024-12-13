@@ -22,3 +22,6 @@ class Config:
 
     # 模糊面部目录配置
     BLUR_FACE_FOLDER = os.path.join(UPLOAD_FOLDER, 'blur_face')
+
+    # 图片裁剪目录配置
+    CROP_FOLDER = os.path.join(UPLOAD_FOLDER, 'crop')

@@ -1,0 +1,113 @@
+/* 上传区域样式 */
+.upload-container {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+}
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: 4px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-area:hover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+.upload-area.dragover {
+    border-color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.1);
+}
+
+/* 裁剪区域样式 */
+.crop-container {
+    max-height: 600px;
+    background-color: #f8f9fa;
+    overflow: hidden;
+}
+
+.crop-container img {
+    max-width: 100%;
+    display: block;
+}
+
+/* 控制面板样式 */
+.btn-group .btn {
+    padding: 0.375rem 0.5rem;
+}
+
+.btn-group .btn i {
+    font-size: 1.1rem;
+}
+
+/* 导航样式 */
+.image-navigation {
+    margin-top: 1.5rem;
+}
+
+#imageCounter {
+    min-width: 60px;
+    text-align: center;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .crop-container {
+        max-height: 400px;
+    }
+    
+    .btn-group .btn {
+        padding: 0.25rem 0.4rem;
+    }
+} 
+
+/* 进度条样式 */
+.progress-section {
+    transition: opacity 0.3s ease;
+}
+
+.progress-section.d-none {
+    opacity: 0;
+}
+
+.progress {
+    height: 0.6rem;
+    border-radius: 0.25rem;
+    background-color: #e9ecef;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: #0d6efd;
+    transition: width 0.3s ease;
+}
+
+#progressText {
+    font-size: 0.85rem;
+}
+
+#progressText .badge {
+    font-weight: normal;
+    padding: 0.5em 1em;
+}
+
+/* 添加进度条动画效果 */
+.progress-bar-animated {
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+.progress-bar-striped {
+    background-image: linear-gradient(45deg, 
+        rgba(255,255,255,.15) 25%, 
+        transparent 25%, 
+        transparent 50%, 
+        rgba(255,255,255,.15) 50%, 
+        rgba(255,255,255,.15) 75%, 
+        transparent 75%, 
+        transparent);
+    background-size: 1rem 1rem;
+} 

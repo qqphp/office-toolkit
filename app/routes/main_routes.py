@@ -16,6 +16,8 @@ from app.services.background_service import BackgroundService
 from app.services.watermark_service import WatermarkService
 from app.services.compress_service import CompressService
 from app.services.blur_face_service import BlurFaceService
+from app.services.crop_service import CropService
+import json
 
 main_bp = Blueprint('main', __name__)
 
@@ -304,7 +306,7 @@ def add_watermark():
         
         current_app.logger.debug(f"Processing watermark with options: {options}")
         
-        # 记录接收到的参��
+        # 记录接收到的参数
         current_app.logger.debug(f"Received parameters: {options}")
         
         # 如果是图片水印，添加水印图片
@@ -483,3 +485,41 @@ def process_blur_face():
         return jsonify({'error': str(e)}), 500
     finally:
         blur_service.cleanup()
+
+@main_bp.route('/crop')
+def crop():
+    """图片裁剪页面"""
+    return render_template('crop.html')
+
+@main_bp.route('/crop-image', methods=['POST'])
+def crop_image():
+    """处理图片裁剪请求"""
+    if 'image' not in request.files:
+        return jsonify({'error': '没有上传文件'}), 400
+        
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': '未选择文件'}), 400
+    
+    try:
+        # 获取裁剪参数
+        crop_data = request.form.get('cropData')
+        if not crop_data:
+            return jsonify({'error': '未提供裁剪参数'}), 400
+            
+        crop_service = CropService()
+        result_path = crop_service.process_image(file, json.loads(crop_data))
+        
+        # 确保返回完整的URL路径
+        if not result_path.startswith('/'):
+            result_path = '/' + result_path
+            
+        return jsonify({
+            'success': True,
+            'image_url': result_path
+        })
+    except ValueError as e:
+        return jsonify({'error': str(e)}), 400
+    except Exception as e:
+        current_app.logger.error(f"处理图片失败: {str(e)}")
+        return jsonify({'error': '处理失败'}), 500

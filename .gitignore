@@ -38,6 +38,8 @@ app/static/uploads/compress/*
 !app/static/uploads/compress/.gitkeep
 app/static/uploads/blur_face/*
 !app/static/uploads/blur_face/.gitkeep
+app/static/uploads/crop/*
+!app/static/uploads/crop/.gitkeep
 
 - app/models/*
 - !app/models/.gitkeep
