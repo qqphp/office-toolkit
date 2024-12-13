@@ -13,6 +13,9 @@ class FaceDetector:
         Args:
             cascade_path: 级联分类器文件所在目录
         """
+        # 禁用OpenCL以确保在headless环境中正常工作
+        cv2.ocl.setUseOpenCL(False)
+        
         # 加载级联分类器
         self.face_cascade = cv2.CascadeClassifier(
             os.path.join(cascade_path, 'haarcascade_frontalface_default.xml')
