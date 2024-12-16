@@ -7,7 +7,6 @@ click==8.1.7
 coloredlogs==15.0.1
 Deprecated==1.2.15
 flask==3.0.3
-Flask-Bootstrap==3.3.7.1
 flatbuffers==24.3.25
 humanfriendly==10.0
 idna==3.10
