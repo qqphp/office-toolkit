@@ -83,6 +83,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         });
+        
+        // 水印模式切换
+        const tileSettings = document.getElementById('tileSettings');
+        // 初始化时隐藏平铺设置
+        tileSettings.classList.add('d-none');
+        
+        document.getElementById('watermarkMode').addEventListener('change', function(e) {
+            if (this.value === 'tile') {
+                tileSettings.classList.remove('d-none');
+            } else {
+                tileSettings.classList.add('d-none');
+            }
+            if (currentOriginalImage) {
+                previewWatermark();
+            }
+        });
+
+        // 疏密度显示值更新
+        document.getElementById('watermarkDensity').addEventListener('input', function(e) {
+            const densityLabels = {
+                1: '很疏',
+                2: '疏',
+                3: '正常',
+                4: '密',
+                5: '很密'
+            };
+            document.getElementById('densityValue').textContent = densityLabels[e.target.value];
+            if (currentOriginalImage) {
+                previewWatermark();
+            }
+        });
     });
 });
 
@@ -186,6 +217,8 @@ async function previewWatermark() {
     ctx.drawImage(currentOriginalImage, 0, 0);
     
     const type = document.getElementById('watermarkType').value;
+    const mode = document.getElementById('watermarkMode').value;
+    const density = parseInt(document.getElementById('watermarkDensity').value);
     const position = document.getElementById('watermarkPosition').value;
     const opacity = document.getElementById('watermarkOpacity').value / 100;
     const sizePercent = parseInt(document.getElementById('watermarkSize').value);
@@ -195,70 +228,77 @@ async function previewWatermark() {
     ctx.save();
     ctx.globalAlpha = opacity;
     
-    if (type === 'text') {
-        const text = document.getElementById('watermarkText').value;
-        const font = document.getElementById('watermarkFont').value;
-        const color = document.getElementById('watermarkColor').value;
-        
-        // 计算字体大小 - 使用与后端相同的逻辑
-        const baseSize = Math.min(canvas.width, canvas.height);
-        const minFontSize = 12;
-        const maxFontSize = baseSize * 0.2; // 最大字体大小为图片较小边的 20%
-        
-        // 线性映射 sizePercent (1-50) 到字体大小范围
-        let fontSize = minFontSize + (maxFontSize - minFontSize) * (sizePercent / 50);
-        
-        // 根据文字长度调整字体大小
-        if (text.length > 10) {
-            const adjustment = 1 - Math.log(text.length - 9) / Math.log(20);
-            fontSize = fontSize * Math.max(0.5, adjustment);
+    if (mode === 'tile') {
+        // 计算平铺参数
+        const spacing = calculateTileSpacing(density, canvas.width, canvas.height);
+        await drawTiledWatermark(type, spacing);
+    } else {
+        // 单个水印的原有逻辑
+        if (type === 'text') {
+            const text = document.getElementById('watermarkText').value;
+            const font = document.getElementById('watermarkFont').value;
+            const color = document.getElementById('watermarkColor').value;
+            
+            // 计算字体大小 - 使用与后端相同的逻辑
+            const baseSize = Math.min(canvas.width, canvas.height);
+            const minFontSize = 12;
+            const maxFontSize = baseSize * 0.2; // 最大字体大小为图片较小边的 20%
+            
+            // 线性映射 sizePercent (1-50) 到字体大小范围
+            let fontSize = minFontSize + (maxFontSize - minFontSize) * (sizePercent / 50);
+            
+            // 根据文字长度调整字体大小
+            if (text.length > 10) {
+                const adjustment = 1 - Math.log(text.length - 9) / Math.log(20);
+                fontSize = fontSize * Math.max(0.5, adjustment);
+            }
+            
+            fontSize = Math.floor(fontSize);
+            
+            // 设置字体
+            ctx.font = `${fontSize}px "${getFontFamily(font)}"`;
+            ctx.fillStyle = color;
+            
+            // 测量文字
+            const metrics = ctx.measureText(text);
+            const textWidth = metrics.width;
+            const textHeight = fontSize;
+            
+            // 计算位置
+            const { x, y } = calculatePosition(position, canvas.width, canvas.height, textWidth, textHeight);
+            
+            // 修改旋转处理
+            ctx.translate(x + textWidth/2, y + textHeight/2);
+            // 将角度转换为弧度，注意 PIL 和 Canvas 的旋转方向相反
+            ctx.rotate(-rotation * Math.PI / 180);
+            
+            // 绘制文字，考虑垂直对齐
+            ctx.textBaseline = 'middle';  // 设置文字垂直对齐方式
+            ctx.textAlign = 'center';     // 设置文字水平对齐方式
+            ctx.fillText(text, 0, 0);     // 在旋转中心点绘制文字
+            
+        } else if (type === 'image' && currentWatermarkImage) {
+            // 计算水印图片大小
+            const watermarkWidth = canvas.width * (sizePercent / 100);
+            const watermarkHeight = (watermarkWidth / currentWatermarkImage.width) * currentWatermarkImage.height;
+            
+            // 计算位置
+            const { x, y } = calculatePosition(position, canvas.width, canvas.height, watermarkWidth, watermarkHeight);
+            
+            // 修改旋转处理
+            ctx.translate(x + watermarkWidth/2, y + watermarkHeight/2);
+            // 将角度转换为弧度，注意 PIL 和 Canvas 的旋转方向相反
+            ctx.rotate(-rotation * Math.PI / 180);
+            
+            // 在旋转中心点绘制图片
+            ctx.drawImage(
+                currentWatermarkImage, 
+                -watermarkWidth/2, 
+                -watermarkHeight/2, 
+                watermarkWidth, 
+                watermarkHeight
+            );
         }
-        
-        fontSize = Math.floor(fontSize);
-        
-        // 设置字体
-        ctx.font = `${fontSize}px "${getFontFamily(font)}"`;
-        ctx.fillStyle = color;
-        
-        // 测量文字
-        const metrics = ctx.measureText(text);
-        const textWidth = metrics.width;
-        const textHeight = fontSize;
-        
-        // 计算位置
-        const { x, y } = calculatePosition(position, canvas.width, canvas.height, textWidth, textHeight);
-        
-        // 修改旋转处理
-        ctx.translate(x + textWidth/2, y + textHeight/2);
-        // 将角度转换为弧度，注意 PIL 和 Canvas 的旋转方向相反
-        ctx.rotate(-rotation * Math.PI / 180);
-        
-        // 绘制文字，考虑垂直对齐
-        ctx.textBaseline = 'middle';  // 设置文字垂直对齐方式
-        ctx.textAlign = 'center';     // 设置文字水平对齐方式
-        ctx.fillText(text, 0, 0);     // 在旋转中心点绘制文字
-        
-    } else if (type === 'image' && currentWatermarkImage) {
-        // 计算水印图片大小
-        const watermarkWidth = canvas.width * (sizePercent / 100);
-        const watermarkHeight = (watermarkWidth / currentWatermarkImage.width) * currentWatermarkImage.height;
-        
-        // 计算位置
-        const { x, y } = calculatePosition(position, canvas.width, canvas.height, watermarkWidth, watermarkHeight);
-        
-        // 修改旋转处理
-        ctx.translate(x + watermarkWidth/2, y + watermarkHeight/2);
-        // 将角度转换为弧度，注意 PIL 和 Canvas 的旋转方向相反
-        ctx.rotate(-rotation * Math.PI / 180);
-        
-        // 在旋转中心点绘制图片
-        ctx.drawImage(
-            currentWatermarkImage, 
-            -watermarkWidth/2, 
-            -watermarkHeight/2, 
-            watermarkWidth, 
-            watermarkHeight
-        );
     }
     
     ctx.restore();
@@ -462,10 +502,15 @@ async function downloadCurrentImage() {
     appendWatermarkSettings(formData);
     
     try {
+        showDebug('正在处理...', 'info');
         const response = await fetch('/add-watermark', {
             method: 'POST',
             body: formData
         });
+        
+        if (!response.ok) {
+            throw new Error('处理失败');
+        }
         
         const data = await response.json();
         if (data.success) {
@@ -476,24 +521,37 @@ async function downloadCurrentImage() {
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            showDebug('下载成功', 'success');
         } else {
-            alert(data.error || '处理失败');
+            throw new Error(data.error || '处理失败');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('处理失败');
+        showDebug(error.message || '处理失败', 'danger');
     }
 }
 
-// 辅助函数：添加水印设置到 FormData
+// 修改辅助函数：添加水印设置到 FormData
 function appendWatermarkSettings(formData) {
     const type = document.getElementById('watermarkType').value;
     formData.append('type', type);
+    
+    // 添加水印模式设置
+    const mode = document.getElementById('watermarkMode').value;
+    formData.append('mode', mode);
+    
+    // 如果是平铺模式，添加密度设置
+    if (mode === 'tile') {
+        formData.append('density', document.getElementById('watermarkDensity').value);
+    }
+    
+    // 添加通用设置
     formData.append('position', document.getElementById('watermarkPosition').value);
     formData.append('opacity', document.getElementById('watermarkOpacity').value);
     formData.append('size', document.getElementById('watermarkSize').value);
     formData.append('rotation', document.getElementById('watermarkRotation').value);
     
+    // 根据水印类型添加特定设置
     if (type === 'text') {
         formData.append('text', document.getElementById('watermarkText').value);
         formData.append('font_name', document.getElementById('watermarkFont').value);
@@ -509,6 +567,7 @@ function appendWatermarkSettings(formData) {
 // 实现批量下载功能
 async function downloadAllImages() {
     try {
+        showDebug('正在处理...', 'info');
         const promises = selectedFiles.map(async (file, index) => {
             const formData = new FormData();
             formData.append('image', file);
@@ -530,8 +589,7 @@ async function downloadAllImages() {
         const paths = results.map(result => result.image_url.replace('/static/', ''));
         
         if (paths.length === 0) {
-            alert('没有可下载的图片');
-            return;
+            throw new Error('没有可下载的图片');
         }
         
         const response = await fetch('/download-all-watermark', {
@@ -552,12 +610,145 @@ async function downloadAllImages() {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
+            showDebug('下载成功', 'success');
         } else {
             const error = await response.json();
             throw new Error(error.error || '下载失败');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert(error.message || '下载失败');
+        showDebug(error.message || '下载失败', 'danger');
     }
+}
+
+// 添加计算平铺间距的函数
+function calculateTileSpacing(density, width, height) {
+    // 基础间距（像素）
+    const baseSpacing = Math.min(width, height) * 0.2; // 20% of smaller dimension
+    
+    // 根据密度调整间距
+    const densityFactors = {
+        1: 2.5,    // 很疏
+        2: 2.0,    // 疏
+        3: 1.5,    // 正常
+        4: 1.0,    // 密
+        5: 0.7     // 很密
+    };
+    
+    return baseSpacing * densityFactors[density];
+}
+
+// 添加绘制平铺水印的函数
+async function drawTiledWatermark(type, spacing) {
+    const width = canvas.width;
+    const height = canvas.height;
+    
+    // 创建单个水印的临时画布
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+    
+    // 设置临时画布大小
+    tempCanvas.width = spacing;
+    tempCanvas.height = spacing;
+    
+    // 在临时画布上绘制单个水印
+    if (type === 'text') {
+        const text = document.getElementById('watermarkText').value;
+        const font = document.getElementById('watermarkFont').value;
+        const color = document.getElementById('watermarkColor').value;
+        const sizePercent = parseInt(document.getElementById('watermarkSize').value);
+        const rotation = parseInt(document.getElementById('watermarkRotation').value);
+        
+        // 计算适合单个水印的字体大小
+        const fontSize = Math.min(spacing / 2, spacing * (sizePercent / 100));
+        
+        // 设置字体
+        tempCtx.font = `${fontSize}px "${getFontFamily(font)}"`;
+        tempCtx.fillStyle = color;
+        tempCtx.textBaseline = 'middle';
+        tempCtx.textAlign = 'center';
+        
+        // 在临时画布中心绘制旋转的文字
+        tempCtx.save();
+        tempCtx.translate(spacing/2, spacing/2);
+        tempCtx.rotate(-rotation * Math.PI / 180);
+        tempCtx.fillText(text, 0, 0);
+        tempCtx.restore();
+        
+    } else if (type === 'image' && currentWatermarkImage) {
+        const rotation = parseInt(document.getElementById('watermarkRotation').value);
+        const sizePercent = parseInt(document.getElementById('watermarkSize').value);
+        
+        // 计算水印图片的大小，考虑用户设置的大小百分比
+        const maxSize = spacing * 0.8;  // 最大占据间距的80%
+        const scale = Math.min(
+            (maxSize * sizePercent / 100) / currentWatermarkImage.width,
+            (maxSize * sizePercent / 100) / currentWatermarkImage.height
+        );
+        
+        const watermarkWidth = currentWatermarkImage.width * scale;
+        const watermarkHeight = currentWatermarkImage.height * scale;
+        
+        // 在临时画布中心绘制旋转的图片
+        tempCtx.save();
+        tempCtx.translate(spacing/2, spacing/2);
+        tempCtx.rotate(-rotation * Math.PI / 180);
+        tempCtx.drawImage(
+            currentWatermarkImage,
+            -watermarkWidth/2,
+            -watermarkHeight/2,
+            watermarkWidth,
+            watermarkHeight
+        );
+        tempCtx.restore();
+    }
+    
+    // 使用 pattern 平铺水印
+    const pattern = ctx.createPattern(tempCanvas, 'repeat');
+    if (pattern) {
+        ctx.fillStyle = pattern;
+        ctx.globalAlpha = document.getElementById('watermarkOpacity').value / 100;
+        ctx.fillRect(0, 0, width, height);
+    }
+}
+
+// 添加 showDebug 函数
+function showDebug(message, type = 'info') {
+    const debugContainer = document.getElementById('debugInfo');
+    if (!debugContainer) {
+        // 如果不存在提示容器，创建一个
+        const container = document.createElement('div');
+        container.id = 'debugInfo';
+        container.className = 'alert alert-dismissible fade';
+        container.style.position = 'fixed';
+        container.style.top = '20px';
+        container.style.left = '50%';
+        container.style.transform = 'translateX(-50%)';
+        container.style.zIndex = '1050';
+        container.style.minWidth = '300px';
+        container.innerHTML = `
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <span class="message"></span>
+        `;
+        document.body.appendChild(container);
+    }
+    
+    const debugInfo = document.getElementById('debugInfo');
+    const messageSpan = debugInfo.querySelector('.message');
+    
+    // 移除所有可能的 alert 类型
+    debugInfo.classList.remove('alert-info', 'alert-success', 'alert-danger', 'alert-warning');
+    // 添加对应的类型
+    debugInfo.classList.add(`alert-${type}`);
+    
+    // 设置消息
+    messageSpan.textContent = message;
+    
+    // 显示提示
+    debugInfo.classList.add('show');
+    
+    // 3秒后自动隐藏
+    setTimeout(() => {
+        debugInfo.classList.remove('show');
+    }, 3000);
 }

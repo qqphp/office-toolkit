@@ -16,8 +16,8 @@ class WatermarkService:
         
         # 定义字体映射
         self.font_map = {
-            'noto-sans': 'NotoSansSC-Regular.otf',      # 思源黑体
-            'noto-serif': 'NotoSerifSC-Regular.otf',    # 思源宋体
+            'noto-sans': 'NotoSansSC-Regular.ttf',      # 思源黑体
+            'noto-serif': 'NotoSerifSC-Regular.ttf',    # 思源宋体
             'harmony-sans': 'HarmonyOS_Sans_SC_Regular.ttf',  # 鸿蒙字体
             'lxgw': 'LXGWWenKai-Regular.ttf',           # 霞鹜文楷
             'source-han': 'SourceHanSansCN-Regular.otf'  # 思源黑体 CN
@@ -35,7 +35,6 @@ class WatermarkService:
     def add_watermark(self, image_file, options: Dict) -> str:
         """添加水印到图片"""
         try:
-            # 添加日志以跟踪参数
             current_app.logger.debug(f"Processing watermark with options: {options}")
             
             # 打开原图
@@ -45,32 +44,50 @@ class WatermarkService:
                 
             # 创建水印层
             watermark = Image.new('RGBA', image.size, (0, 0, 0, 0))
-            draw = ImageDraw.Draw(watermark)
             
-            if options['type'] == 'text':
-                self._add_text_watermark(
-                    watermark,
-                    draw, 
-                    watermark.size, 
-                    options['text'],
-                    options['position'],
-                    options['opacity'],
-                    options['size'],
-                    rotation=options['rotation'],
-                    font_name=options['font_name'],
-                    color=options['color']
-                )
+            # 获取水印模式
+            mode = options.get('mode', 'single')
+            current_app.logger.debug(f"Watermark mode: {mode}")
+            
+            if mode == 'tile':
+                try:
+                    density = int(options.get('density', 3))
+                    spacing = self._calculate_tile_spacing(
+                        density,
+                        image.size[0],
+                        image.size[1]
+                    )
+                    self._add_tiled_watermark(watermark, options, spacing)
+                except Exception as e:
+                    current_app.logger.error(f"Error in tile mode: {str(e)}")
+                    raise
             else:
-                watermark_image = options.get('image')
-                if watermark_image:
-                    self._add_image_watermark(
+                # 单个水印逻辑
+                draw = ImageDraw.Draw(watermark)
+                if options['type'] == 'text':
+                    self._add_text_watermark(
                         watermark,
-                        watermark_image,
+                        draw, 
+                        watermark.size, 
+                        options['text'],
                         options['position'],
                         options['opacity'],
                         options['size'],
-                        rotation=options['rotation']
+                        rotation=options.get('rotation', 0),
+                        font_name=options.get('font_name', 'noto-sans'),
+                        color=options.get('color', '#000000')
                     )
+                else:
+                    watermark_image = options.get('image')
+                    if watermark_image:
+                        self._add_image_watermark(
+                            watermark,
+                            watermark_image,
+                            options['position'],
+                            options['opacity'],
+                            options['size'],
+                            rotation=options.get('rotation', 0)
+                        )
             
             # 合并原图和水印
             result = Image.alpha_composite(image, watermark)
@@ -360,3 +377,72 @@ class WatermarkService:
                     os.remove(file)
             except Exception as e:
                 current_app.logger.error(f"清理临时文件失败: {str(e)}")
+
+    def _calculate_tile_spacing(self, density: int, width: int, height: int) -> int:
+        """计算平铺间距"""
+        base_spacing = min(width, height) * 0.2
+        density_factors = {
+            1: 2.5,    # 很疏
+            2: 2.0,    # 疏
+            3: 1.5,    # 正常
+            4: 1.0,    # 密
+            5: 0.7     # 很密
+        }
+        return int(base_spacing * density_factors.get(density, 1.5))
+
+    def _add_tiled_watermark(self, watermark: Image, options: Dict, spacing: int):
+        """添加平铺水印"""
+        try:
+            # 创建单个水印图案
+            pattern = Image.new('RGBA', (spacing, spacing), (0, 0, 0, 0))
+            pattern_draw = ImageDraw.Draw(pattern)
+            
+            # 设置透明度
+            opacity = int(options.get('opacity', 50))
+            rotation = float(options.get('rotation', 0))
+            size_percent = int(options.get('size', 20))
+            
+            if options['type'] == 'text':
+                # 计算适合单个水印的字体大小
+                font_size = int(spacing * 0.4 * size_percent / 100)  # 考虑用户设置的大小
+                text = options.get('text', '')
+                font_name = options.get('font_name', 'noto-sans')
+                color = options.get('color', '#000000')
+                
+                self._add_text_watermark(
+                    pattern,
+                    pattern_draw,
+                    (spacing, spacing),
+                    text,
+                    'center',
+                    opacity,
+                    font_size,
+                    rotation,
+                    font_name,
+                    color
+                )
+            else:
+                # 处理图片水印
+                watermark_image = options.get('image')
+                if watermark_image:
+                    # 计算图片水印大小，考虑用户设置的大小百分比
+                    max_size = int(spacing * 0.8)  # 最大占据间距的80%
+                    scaled_size = int(max_size * size_percent / 100)
+                    
+                    self._add_image_watermark(
+                        pattern,
+                        watermark_image,
+                        'center',
+                        opacity,
+                        scaled_size,
+                        rotation
+                    )
+            
+            # 平铺水印
+            for y in range(0, watermark.height, spacing):
+                for x in range(0, watermark.width, spacing):
+                    watermark.paste(pattern, (x, y), pattern)
+                
+        except Exception as e:
+            current_app.logger.error(f"Failed to add tiled watermark: {str(e)}")
+            raise

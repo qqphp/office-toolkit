@@ -22,6 +22,7 @@
     padding: 2rem;
     cursor: pointer;
     transition: all 0.3s ease;
+    margin-bottom: 2rem;
 }
 
 .watermark-upload-area:hover {
@@ -38,7 +39,6 @@
     background-color: #f8f9fa;
     border-radius: 4px;
     padding: 1rem;
-    margin-top: 1rem;
 }
 
 .watermark-settings .form-label {
@@ -144,4 +144,47 @@
 
 .alert li.text-primary {
     color: #0d6efd;
+}
+
+/* 平铺设置样式 */
+#tileSettings {
+    transition: all 0.3s ease;
+}
+
+#tileSettings.d-none {
+    display: none !important;
+}
+
+/* 密度值显示样式 */
+#densityValue {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* 添加提示框样式 */
+#debugInfo {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050;
+    min-width: 300px;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    border: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#debugInfo.show {
+    opacity: 1;
+}
+
+#debugInfo .message {
+    display: inline-block;
+    margin-right: 1rem;
+}
+
+#debugInfo .btn-close {
+    padding: 0.5rem;
 }

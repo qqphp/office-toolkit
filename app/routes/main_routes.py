@@ -276,25 +276,26 @@ def watermark():
 
 @main_bp.route('/add-watermark', methods=['POST'])
 def add_watermark():
-    current_app.logger.debug("Processing watermark request")
-    
-    if 'image' not in request.files:
-        return jsonify({'error': '没有上传文件'}), 400
-        
-    file = request.files['image']
-    if file.filename == '':
-        return jsonify({'error': '未选择文件'}), 400
-    
-    # 检查文件类型
-    if not allowed_file(file.filename):
-        return jsonify({'error': '不支持的文件类型'}), 400
-    
-    current_app.logger.debug(f"Received file: {file.filename}")
-    
     try:
+        # 记录接收到的所有参数
+        current_app.logger.debug(f"Received form data: {request.form}")
+        current_app.logger.debug(f"Received files: {request.files}")
+        
+        if 'image' not in request.files:
+            return jsonify({'error': '没有上传文件'}), 400
+            
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': '未选择文件'}), 400
+        
+        # 检查文件类型
+        if not allowed_file(file.filename):
+            return jsonify({'error': '不支持的文件类型'}), 400
+        
         # 获取并转换参数
         options = {
             'type': request.form.get('type', 'text'),
+            'mode': request.form.get('mode', 'single'),
             'text': request.form.get('text', '图优助手'),
             'position': request.form.get('position', 'center'),
             'opacity': int(request.form.get('opacity', 50)),
@@ -304,10 +305,11 @@ def add_watermark():
             'rotation': float(request.form.get('rotation', 0))
         }
         
-        current_app.logger.debug(f"Processing watermark with options: {options}")
+        # 如果是平铺模式，添加密度参数
+        if options['mode'] == 'tile':
+            options['density'] = int(request.form.get('density', 3))
         
-        # 记录接收到的参数
-        current_app.logger.debug(f"Received parameters: {options}")
+        current_app.logger.debug(f"Processing with options: {options}")
         
         # 如果是图片水印，添加水印图片
         if options['type'] == 'image' and 'watermark' in request.files:
@@ -321,15 +323,9 @@ def add_watermark():
             'image_url': f'/static/{result_path}'
         })
         
-    except ValueError as e:
-        current_app.logger.error(f"Invalid parameter: {str(e)}")
-        return jsonify({'error': str(e)}), 400
     except Exception as e:
         current_app.logger.error(f"添加水印失败: {str(e)}")
         return jsonify({'error': str(e)}), 500
-    finally:
-        if 'watermark_service' in locals():
-            watermark_service.cleanup()
 
 def allowed_file(filename):
     return '.' in filename and \
