@@ -18,6 +18,8 @@ from app.services.compress_service import CompressService
 from app.services.blur_face_service import BlurFaceService
 from app.services.crop_service import CropService
 import json
+import base64
+from zipfile import ZipFile
 
 main_bp = Blueprint('main', __name__)
 
@@ -110,31 +112,33 @@ def download_image():
 @main_bp.route('/download-all-watermark', methods=['POST'])
 def download_all_watermark():
     try:
-        # 获取所有处理后的图片路径
-        image_paths = request.json.get('paths', [])
-        if not image_paths:
-            return jsonify({'error': '没有可下载的图片'}), 400
+        data = request.get_json()
+        if not data or 'images' not in data:
+            return jsonify({'error': '没有接收到图片数据'}), 400
             
         # 创建ZIP文件
         memory_file = BytesIO()
         with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for i, path in enumerate(image_paths):
-                # 构建完整的文件系统路径
-                full_path = os.path.join(current_app.root_path, 'static', path)
+            for i, img_data in enumerate(data['images']):
+                # 从 base64 数据中提取图片内容
+                img_base64 = img_data['data'].split(',')[1]
+                img_bytes = base64.b64decode(img_base64)
                 
-                # 检查文件是否存在并记录日志
-                current_app.logger.debug(f"Processing file: {full_path}")
+                # 生成唯一文件名并保存图片
+                filename = f'watermark_{uuid.uuid4().hex}.png'
+                # 使用配置的水印文件夹路径
+                save_path = os.path.join(current_app.config['WATERMARK_FOLDER'], filename)
                 
-                if os.path.exists(full_path):
-                    # 获取原始文件名
-                    original_filename = os.path.basename(full_path)
-                    # 添加到zip文件，使用序号和原始文件名
-                    arcname = f'watermark_{i+1}_{original_filename}'
-                    
-                    current_app.logger.debug(f"Adding to zip: {arcname}")
-                    zf.write(full_path, arcname)
-                else:
-                    current_app.logger.warning(f"File not found: {full_path}")
+                # 确保目录存在
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                
+                # 保存图片
+                with open(save_path, 'wb') as f:
+                    f.write(img_bytes)
+                
+                # 添加到zip文件
+                arcname = f'watermark_{i+1}_{img_data["name"]}'
+                zf.write(save_path, arcname)
         
         memory_file.seek(0)
         timestamp = time.strftime('%Y%m%d_%H%M%S')
@@ -154,8 +158,8 @@ def download_all_watermark():
         return response
         
     except Exception as e:
-        current_app.logger.error(f"批量下载失败: {str(e)}", exc_info=True)
-        return jsonify({'error': '打包下载失败'}), 500
+        current_app.logger.error(f"Error in download_all_watermark: {str(e)}")
+        return jsonify({'error': '处理失败'}), 500
 
 @main_bp.route('/download-all-bg', methods=['POST'])
 def download_all_bg():
@@ -276,55 +280,41 @@ def watermark():
 
 @main_bp.route('/add-watermark', methods=['POST'])
 def add_watermark():
+    """接收前端处理好的水印图片并保存"""
     try:
-        # 记录接收到的所有参数
-        current_app.logger.debug(f"Received form data: {request.form}")
-        current_app.logger.debug(f"Received files: {request.files}")
-        
-        if 'image' not in request.files:
-            return jsonify({'error': '没有上传文件'}), 400
+        data = request.get_json()
+        if not data or 'imageData' not in data:
+            return jsonify({'error': '没有接收到图片数据'}), 400
             
-        file = request.files['image']
-        if file.filename == '':
-            return jsonify({'error': '未选择文件'}), 400
+        # 从 base64 数据中提取图片内容
+        img_data = data['imageData'].split(',')[1]  # 移除 "data:image/png;base64," 前缀
+        img_bytes = base64.b64decode(img_data)
         
-        # 检查文件类型
-        if not allowed_file(file.filename):
-            return jsonify({'error': '不支持的文件类型'}), 400
+        # 生成唯一文件名
+        filename = f'watermark_{uuid.uuid4().hex}.png'
+        # 使用配置的水印文件夹路径
+        save_path = os.path.join(current_app.config['WATERMARK_FOLDER'], filename)
         
-        # 获取并转换参数
-        options = {
-            'type': request.form.get('type', 'text'),
-            'mode': request.form.get('mode', 'single'),
-            'text': request.form.get('text', '图优助手'),
-            'position': request.form.get('position', 'center'),
-            'opacity': int(request.form.get('opacity', 50)),
-            'size': int(request.form.get('size', 20)),
-            'font_name': request.form.get('font_name', 'noto-sans'),
-            'color': request.form.get('color', '#000000'),
-            'rotation': float(request.form.get('rotation', 0))
-        }
+        # 确保目录存在
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
         
-        # 如果是平铺模式，添加密度参数
-        if options['mode'] == 'tile':
-            options['density'] = int(request.form.get('density', 3))
+        # 保存图片
+        with open(save_path, 'wb') as f:
+            f.write(img_bytes)
         
-        current_app.logger.debug(f"Processing with options: {options}")
+        # 构建用于返回的URL路径（相对于static目录）
+        url_path = os.path.join('uploads', 'watermark', filename)
         
-        # 如果是图片水印，添加水印图片
-        if options['type'] == 'image' and 'watermark' in request.files:
-            options['image'] = request.files['watermark']
-        
-        watermark_service = WatermarkService()
-        result_path = watermark_service.add_watermark(file, options)
+        # 记录使用统计
+        current_app.logger.info("Watermark image saved: %s", save_path)
         
         return jsonify({
             'success': True,
-            'image_url': f'/static/{result_path}'
+            'image_url': f'/static/{url_path}'
         })
         
     except Exception as e:
-        current_app.logger.error(f"添加水印失败: {str(e)}")
+        current_app.logger.error(f"Error in add_watermark: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 def allowed_file(filename):

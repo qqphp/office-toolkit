@@ -397,8 +397,13 @@ function updateDownloadButtons() {
     const downloadBtn = document.getElementById('downloadBtn');
     const downloadAllBtn = document.getElementById('downloadAllBtn');
     
-    downloadBtn.classList.remove('d-none');
-    downloadBtn.onclick = downloadCurrentImage;
+    // 只要有预览图就可以下载
+    if (document.getElementById('resultPreview').src) {
+        downloadBtn.classList.remove('d-none');
+        downloadBtn.onclick = downloadCurrentImage;
+    } else {
+        downloadBtn.classList.add('d-none');
+    }
     
     if (selectedFiles.length > 1) {
         downloadAllBtn.classList.remove('d-none');
@@ -505,109 +510,75 @@ function updateNavigationButtons() {
 
 // 下载当前图片
 async function downloadCurrentImage() {
-    const formData = new FormData();
-    formData.append('image', selectedFiles[currentImageIndex]);
-    
-    // 添加水印设置
-    appendWatermarkSettings(formData);
+    const resultPreview = document.getElementById('resultPreview');
+    if (!resultPreview.src) return;
     
     try {
-        showDebug('正在处理...', 'info');
         const response = await fetch('/add-watermark', {
             method: 'POST',
-            body: formData
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                imageData: resultPreview.src
+            })
         });
-        
-        if (!response.ok) {
-            throw new Error('处理失败');
-        }
         
         const data = await response.json();
         if (data.success) {
-            // 下载处理后的图片
+            // 创建下载链接
             const a = document.createElement('a');
             a.href = data.image_url;
-            a.download = `watermark_${Date.now()}.png`;
+            a.download = `watermark_${selectedFiles[currentImageIndex].name}`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-            showDebug('下载成功', 'success');
         } else {
-            throw new Error(data.error || '处理失败');
+            throw new Error(data.error || '下载失败');
         }
     } catch (error) {
         console.error('Error:', error);
-        showDebug(error.message || '处理失败', 'danger');
+        showDebug(error.message || '下载失败', 'danger');
     }
 }
 
-// 修改辅助函数：添加水印设置到 FormData
-function appendWatermarkSettings(formData) {
-    const type = document.getElementById('watermarkType').value;
-    formData.append('type', type);
-    
-    // 添加水印模式设置
-    const mode = document.getElementById('watermarkMode').value;
-    formData.append('mode', mode);
-    
-    // 如果是平铺模式，添加密度设置
-    if (mode === 'tile') {
-        formData.append('density', document.getElementById('watermarkDensity').value);
-    }
-    
-    // 添加通用设置
-    formData.append('position', document.getElementById('watermarkPosition').value);
-    formData.append('opacity', document.getElementById('watermarkOpacity').value);
-    formData.append('size', document.getElementById('watermarkSize').value);
-    formData.append('rotation', document.getElementById('watermarkRotation').value);
-    
-    // 根据水印类型添加特定设置
-    if (type === 'text') {
-        formData.append('text', document.getElementById('watermarkText').value);
-        formData.append('font_name', document.getElementById('watermarkFont').value);
-        formData.append('color', document.getElementById('watermarkColor').value);
-    } else {
-        const watermarkFile = document.getElementById('watermarkImage').files[0];
-        if (watermarkFile) {
-            formData.append('watermark', watermarkFile);
-        }
-    }
-}
-
-// 实现批量下载功能
+// 批量下载图片
 async function downloadAllImages() {
     try {
         showDebug('正在处理...', 'info');
-        const promises = selectedFiles.map(async (file, index) => {
-            const formData = new FormData();
-            formData.append('image', file);
-            appendWatermarkSettings(formData);
+        
+        // 保存当前查看的图片索引
+        const originalIndex = currentImageIndex;
+        
+        // 收集所有处理后的图片数据
+        const imageDataUrls = [];
+        
+        // 遍历所有图片并生成水印
+        for (let i = 0; i < selectedFiles.length; i++) {
+            currentImageIndex = i;
+            await showImage(i);
+            // 等待水印预览完成
+            await new Promise(resolve => setTimeout(resolve, 500));
             
-            const response = await fetch('/add-watermark', {
-                method: 'POST',
-                body: formData
-            });
-            
-            if (!response.ok) {
-                throw new Error(`处理第 ${index + 1} 张图片失败`);
+            // 获取预览图的 data URL
+            const resultPreview = document.getElementById('resultPreview');
+            if (resultPreview.src) {
+                imageDataUrls.push({
+                    name: selectedFiles[i].name,
+                    data: resultPreview.src
+                });
             }
-            
-            return response.json();
-        });
-        
-        const results = await Promise.all(promises);
-        const paths = results.map(result => result.image_url.replace('/static/', ''));
-        
-        if (paths.length === 0) {
-            throw new Error('没有可下载的图片');
         }
         
+        // 发送到后端打包
         const response = await fetch('/download-all-watermark', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ paths: paths })
+            body: JSON.stringify({ 
+                images: imageDataUrls 
+            })
         });
         
         if (response.ok) {
@@ -620,6 +591,12 @@ async function downloadAllImages() {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
+            
+            // 恢复到用户之前查看的图片
+            currentImageIndex = originalIndex;
+            await showImage(originalIndex);
+            updateNavigationButtons();
+            
             showDebug('下载成功', 'success');
         } else {
             const error = await response.json();
