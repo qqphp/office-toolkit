@@ -3,6 +3,7 @@ let cropper = null;
 let selectedFiles = [];
 let processedImages = new Map();
 let currentImageIndex = 0;
+let currentAspectRatio = NaN;
 
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
@@ -60,8 +61,10 @@ function initializeControls() {
     // 宽高比控制
     document.querySelectorAll('input[name="aspectRatio"]').forEach(input => {
         input.addEventListener('change', function() {
-            const ratio = parseFloat(this.value);
-            cropper.setAspectRatio(ratio);
+            currentAspectRatio = parseFloat(this.value);
+            if (cropper) {
+                cropper.setAspectRatio(currentAspectRatio);
+            }
         });
     });
     
@@ -101,32 +104,27 @@ function initializeControls() {
 }
 
 // 显示图片
-function showImage(index) {
+function showImage(index, config = {}) {
     const file = selectedFiles[index];
     const image = document.getElementById('cropImage');
     
-    // 清除之前的图片URL
     if (image.src) {
         URL.revokeObjectURL(image.src);
     }
     
-    // 销毁现有的裁剪器
     if (cropper) {
         cropper.destroy();
         cropper = null;
     }
     
-    // 显示原始图片
     const objectUrl = URL.createObjectURL(file);
     image.src = objectUrl;
     
-    // 等待图片加载完成
     image.onload = function() {
-        // 配置裁剪器选项
         const options = {
             viewMode: 2,
             dragMode: 'move',
-            aspectRatio: NaN,
+            aspectRatio: config.aspectRatio || currentAspectRatio,
             autoCropArea: 0.9,
             restore: false,
             guides: true,
@@ -136,30 +134,17 @@ function showImage(index) {
             cropBoxResizable: true,
             toggleDragModeOnDblclick: false,
             ready: () => {
-                // 如果是已处理的图片，设置默认裁剪区域
-                if (processedImages.has(index)) {
-                    const imageData = cropper.getImageData();
-                    const naturalWidth = imageData.naturalWidth;
-                    const naturalHeight = imageData.naturalHeight;
-                    
-                    // 设置默认裁剪区域为图片的中心80%区域
-                    cropper.setCropBoxData({
-                        left: naturalWidth * 0.1,
-                        top: naturalHeight * 0.1,
-                        width: naturalWidth * 0.8,
-                        height: naturalHeight * 0.8
-                    });
+                if (config.initialCanvasData) {
+                    cropper.setCanvasData(config.initialCanvasData);
+                }
+                if (config.initialCropBoxData) {
+                    cropper.setCropBoxData(config.initialCropBoxData);
                 }
             }
         };
         
-        // 创建新的裁剪器实例
         cropper = new Cropper(image, options);
-        
-        // 更新导航状态
         updateNavigationButtons();
-        
-        // 更新下载按钮状态
         updateDownloadButtons();
     };
 }
@@ -169,11 +154,14 @@ async function processCrop() {
     if (!cropper || !selectedFiles[currentImageIndex]) return;
     
     try {
+        // 保存当前的裁剪器设置
+        const currentCropperData = cropper.getData();
+        const currentCanvasData = cropper.getCanvasData();
+        const currentContainerData = cropper.getContainerData();
+        
         // 获取裁剪数据和图片数据
-        const cropData = cropper.getData(true); // 获取实际的裁剪数据
-        const canvasData = cropper.getCanvasData(); // 获取画布数据
-        const imageData = cropper.getImageData(); // 获取图片数据
-        const containerData = cropper.getContainerData(); // 获取容器数据
+        const cropData = cropper.getData(true);
+        const imageData = cropper.getImageData();
         
         // 验证裁剪区域是否有效
         if (cropData.width <= 0 || cropData.height <= 0) {
@@ -183,23 +171,17 @@ async function processCrop() {
         // 创建表单数据
         const formData = new FormData();
         formData.append('image', selectedFiles[currentImageIndex]);
-        
-        // 获取完整的裁剪数据
-        const fullCropData = {
+        formData.append('cropData', JSON.stringify({
             ...cropData,
-            rotate: cropData.rotate, // 旋转角度
-            scaleX: cropData.scaleX, // 水平缩放
-            scaleY: cropData.scaleY, // 垂直缩放
-            naturalWidth: imageData.naturalWidth, // 原始宽度
-            naturalHeight: imageData.naturalHeight // 原始高度
-        };
+            rotate: cropData.rotate,
+            scaleX: cropData.scaleX,
+            scaleY: cropData.scaleY,
+            naturalWidth: imageData.naturalWidth,
+            naturalHeight: imageData.naturalHeight
+        }));
         
-        formData.append('cropData', JSON.stringify(fullCropData));
-        
-        // 显示进度提示
         showProgress('正在处理图片...');
         
-        // 发送请求
         const response = await fetch('/crop-image', {
             method: 'POST',
             body: formData
@@ -208,14 +190,16 @@ async function processCrop() {
         const data = await response.json();
         
         if (data.success) {
-            // 保存处理后的图片URL
             processedImages.set(currentImageIndex, data.image_url);
-            
-            // 显示成功提示
             showToast('裁剪成功', 'success');
-            
-            // 更新下载按钮状态
             updateDownloadButtons();
+            
+            // 重新初始化裁剪器，保持之前的状态
+            showImage(currentImageIndex, {
+                aspectRatio: currentAspectRatio,
+                initialCanvasData: currentCanvasData,
+                initialCropBoxData: currentCropperData
+            });
         } else {
             throw new Error(data.error || '处理失败');
         }
