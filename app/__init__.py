@@ -3,6 +3,7 @@ from flask_bootstrap import Bootstrap5
 from config import Config
 from app.config.page_meta import PAGE_META
 import os
+from datetime import datetime
 
 bootstrap = Bootstrap5()
 
@@ -25,5 +26,9 @@ def create_app(config_class=Config):
     # 注册蓝图
     from app.routes.main_routes import main_bp
     app.register_blueprint(main_bp)
+    
+    @app.context_processor
+    def utility_processor():
+        return {'now': datetime.now()}
     
     return app 

@@ -81,6 +81,22 @@
         {% block content %}{% endblock %}
     </main>
 
+    <footer class="footer mt-auto py-3 bg-light">
+        <div class="container text-center">
+            <span class="text-muted">
+                <a href="https://beian.miit.gov.cn/" target="_blank" class="text-decoration-none text-muted">
+                    湘ICP备2024094908号-1
+                </a>
+                 | <a href="https://qstg.site" target="_blank" class="text-decoration-none text-muted">郴州青石踏歌贸易有限公司</a>
+            </span>
+            <div class="mt-2">
+                <small class="text-muted">
+                    &copy; {{ now.year }} 图优助手. All Rights Reserved.
+                </small>
+            </div>
+        </div>
+    </footer>
+
     {{ bootstrap.load_js() }}
     {% block extra_js %}{% endblock %}
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>

@@ -91,3 +91,17 @@
 .nav-link i {
     vertical-align: -0.125em;
 }
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+main {
+    flex: 1;
+}
+
+.footer {
+    margin-top: auto;
+}
