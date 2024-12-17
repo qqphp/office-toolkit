@@ -171,9 +171,11 @@ class WatermarkService:
             txt = Image.new('RGBA', (canvas_width, canvas_height), (255, 255, 255, 0))
             d = ImageDraw.Draw(txt)
 
-            # 转换颜色格式
+            # 转换颜色格式，修改透明度处理
             color = tuple(int(color.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
-            color = color + (int(255 * opacity / 100),)
+            # 将百分比转换为0-255范围
+            alpha = int(255 * opacity / 100)
+            color = color + (alpha,)
 
             # 在画布正中心绘制文字
             center_x = canvas_width // 2
@@ -220,12 +222,12 @@ class WatermarkService:
             if mark.mode != 'RGBA':
                 mark = mark.convert('RGBA')
                 
-            # 调整水大小
+            # 调整水印大小
             ratio = min(base_image.size) * size / 100 / max(mark.size)
             new_size = tuple(int(dim * ratio) for dim in mark.size)
             mark = mark.resize(new_size, Image.LANCZOS)
             
-            # 调整透明度
+            # 将百分比转换为0-255范围
             alpha = int(255 * opacity / 100)
             mark.putalpha(alpha)
             
@@ -397,8 +399,10 @@ class WatermarkService:
             pattern = Image.new('RGBA', (spacing, spacing), (0, 0, 0, 0))
             pattern_draw = ImageDraw.Draw(pattern)
             
-            # 设置透明度
-            opacity = int(options.get('opacity', 50))
+            # 设置透明度 - 将百分比转换为0-255范围
+            opacity_percent = int(options.get('opacity', 50))  # 默认50%
+            opacity = int(255 * opacity_percent / 100)
+            
             rotation = float(options.get('rotation', 0))
             size_percent = int(options.get('size', 20))
             

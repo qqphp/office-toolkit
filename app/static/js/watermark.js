@@ -114,6 +114,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 previewWatermark();
             }
         });
+
+        // 添加透明度滑块的输入事件
+        document.getElementById('watermarkOpacity').addEventListener('input', function(e) {
+            // 直接显示百分比值
+            document.getElementById('opacityValue').textContent = `${e.target.value}%`;
+            if (currentOriginalImage) {
+                previewWatermark();
+            }
+        });
     });
 });
 
@@ -220,13 +229,14 @@ async function previewWatermark() {
     const mode = document.getElementById('watermarkMode').value;
     const density = parseInt(document.getElementById('watermarkDensity').value);
     const position = document.getElementById('watermarkPosition').value;
-    const opacity = document.getElementById('watermarkOpacity').value / 100;
+    const opacity = parseInt(document.getElementById('watermarkOpacity').value);
     const sizePercent = parseInt(document.getElementById('watermarkSize').value);
     const rotation = parseInt(document.getElementById('watermarkRotation').value);
     
     // 保存当前上下文状态
     ctx.save();
-    ctx.globalAlpha = opacity;
+    // 使用与后端一致的透明度计算方式
+    ctx.globalAlpha = opacity / 100;  // 使用百分比值
     
     if (mode === 'tile') {
         // 计算平铺参数
@@ -707,7 +717,8 @@ async function drawTiledWatermark(type, spacing) {
     const pattern = ctx.createPattern(tempCanvas, 'repeat');
     if (pattern) {
         ctx.fillStyle = pattern;
-        ctx.globalAlpha = document.getElementById('watermarkOpacity').value / 100;
+        const opacity = parseInt(document.getElementById('watermarkOpacity').value);
+        ctx.globalAlpha = opacity / 100;  // 使用百分比值
         ctx.fillRect(0, 0, width, height);
     }
 }
