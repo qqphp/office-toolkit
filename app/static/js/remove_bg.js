@@ -231,7 +231,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const downloadUrl = window.URL.createObjectURL(blob);
                 const link = document.createElement('a');
                 link.href = downloadUrl;
-                link.download = 'processed-image.png';
+                // 生成随机字符串作为文件名的一部分
+                const randomStr = Math.random().toString(36).substring(2, 8);
+                link.download = `processed-image-${randomStr}.png`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
