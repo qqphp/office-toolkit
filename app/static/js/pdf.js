@@ -243,10 +243,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const blob = await response.blob();
                 console.log('Received blob:', blob.type, blob.size);
                 
+                // 只使用随机字符串生成文件名
+                const randomStr = Math.random().toString(36).substring(2, 8);
+                const filename = `converted_${randomStr}.pdf`;
+                
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'converted.pdf';
+                a.download = filename;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
