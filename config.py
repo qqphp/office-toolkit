@@ -1,6 +1,10 @@
 import os
 
 class Config:
+    # Debug and port configuration
+    DEBUG = False  # 直接设置为 False，不使用环境变量
+    PORT = 5001   # 直接设置固定端口
+    
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key'
     UPLOAD_FOLDER = os.path.join('app', 'static', 'uploads')
     REMOVE_BG_FOLDER = os.path.join(UPLOAD_FOLDER, 'remove_bg')

@@ -8,4 +8,7 @@ os.environ['OPENCV_VIDEOIO_PRIORITY_MSMF'] = '0'  # 禁用视频IO后端
 app = create_app()
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run(
+        debug=app.config['DEBUG'],
+        port=app.config['PORT']
+    ) 
