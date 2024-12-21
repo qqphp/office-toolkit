@@ -6,6 +6,7 @@
     font-display: swap;
 }
 
+/* 注释掉其他字体
 @font-face {
     font-family: 'Noto Serif SC';
     src: url('../fonts/NotoSerifSC-Regular.ttf') format('truetype');
@@ -37,3 +38,4 @@
     font-style: normal;
     font-display: swap;
 } 
+*/ 

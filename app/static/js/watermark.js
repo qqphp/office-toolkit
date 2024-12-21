@@ -10,11 +10,13 @@ let currentWatermarkImage = null;
 // 添加字体加载检查函数
 async function loadFonts() {
     const fonts = [
-        new FontFace('Noto Sans SC', `url(${fontPath('NotoSansSC-Regular.ttf')})`),
+        new FontFace('Noto Sans SC', `url(${fontPath('NotoSansSC-Regular.ttf')})`)
+        /* 注释掉其他字体
         new FontFace('Noto Serif SC', `url(${fontPath('NotoSerifSC-Regular.ttf')})`),
         new FontFace('HarmonyOS Sans SC', `url(${fontPath('HarmonyOS_Sans_SC_Regular.ttf')})`),
         new FontFace('LXGW WenKai', `url(${fontPath('LXGWWenKai-Regular.ttf')})`),
-        new FontFace('Source Han Sans CN', `url(${fontPath('SourceHanSansCN-Regular.otf')})`)
+        new FontFace('Source Han Sans CN', `url(${fontPath('SourceHanSansCN-Regular.otf')})`),
+        */
     ];
 
     try {
@@ -322,11 +324,13 @@ async function previewWatermark() {
 // 添加字体映射函数
 function getFontFamily(fontKey) {
     const fontMap = {
-        'noto-sans': 'Noto Sans SC',
+        'noto-sans': 'Noto Sans SC'
+        /* 注释掉其他字体
         'noto-serif': 'Noto Serif SC',
         'harmony-sans': 'HarmonyOS Sans SC',
         'lxgw': 'LXGW WenKai',
         'source-han': 'Source Han Sans CN'
+        */
     };
     return fontMap[fontKey] || 'Noto Sans SC';
 }
