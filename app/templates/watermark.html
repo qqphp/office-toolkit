@@ -38,11 +38,21 @@
             <div class="watermark-settings mb-4">
                 <h5 class="mb-3">水印设置</h5>
                 <div class="row g-3">
+                    <!-- 水印类型选择 -->
                     <div class="col-md-6">
                         <label class="form-label">水印类型</label>
                         <select class="form-select" id="watermarkType">
                             <option value="text">文字水印</option>
                             <option value="image">图片水印</option>
+                        </select>
+                    </div>
+                    
+                    <!-- 水印模式 -->
+                    <div class="col-md-6">
+                        <label class="form-label">水印模式</label>
+                        <select class="form-select" id="watermarkMode">
+                            <option value="single">单个水印</option>
+                            <option value="tile">平铺水印</option>
                         </select>
                     </div>
                     
@@ -58,6 +68,7 @@
                         <input type="file" class="form-control" id="watermarkImage" accept="image/*">
                     </div>
                     
+                    <!-- 位置设置 -->
                     <div class="col-md-6">
                         <label class="form-label">位置</label>
                         <select class="form-select" id="watermarkPosition">
@@ -69,6 +80,7 @@
                         </select>
                     </div>
                     
+                    <!-- 透明度设置 -->
                     <div class="col-md-6">
                         <label class="form-label">透明度</label>
                         <input type="range" class="form-range" id="watermarkOpacity" 
@@ -78,6 +90,7 @@
                         </div>
                     </div>
                     
+                    <!-- 大小设置 -->
                     <div class="col-md-6">
                         <label class="form-label">大小</label>
                         <input type="range" class="form-range" id="watermarkSize" 
@@ -87,6 +100,7 @@
                         </div>
                     </div>
                     
+                    <!-- 旋转角度设置 -->
                     <div class="col-md-6">
                         <label class="form-label">旋转角度</label>
                         <input type="range" class="form-range" id="watermarkRotation" 
@@ -96,14 +110,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-6">
-                        <label class="form-label">水印模式</label>
-                        <select class="form-select" id="watermarkMode">
-                            <option value="single">单个水印</option>
-                            <option value="tile">平铺水印</option>
-                        </select>
-                    </div>
-                    
+                    <!-- 平铺疏密度设置 -->
                     <div class="col-md-6" id="tileSettings">
                         <label class="form-label">平铺疏密度</label>
                         <input type="range" class="form-range" id="watermarkDensity" 
@@ -113,19 +120,7 @@
                         </div>
                     </div>
                     
-                    <div class="col-md-6" id="textFontSettings">
-                        <label class="form-label">字体选择</label>
-                        <select class="form-select" id="watermarkFont">
-                            <option value="noto-sans">思源黑体</option>
-                            <!-- 注释掉其他字体选项
-                            <option value="noto-serif">思源宋体</option>
-                            <option value="harmony-sans">鸿蒙字体</option>
-                            <option value="lxgw">霞鹜文楷</option>
-                            <option value="source-han">思源黑体 CN</option>
-                            -->
-                        </select>
-                    </div>
-                    
+                    <!-- 字体颜色设置 -->
                     <div class="col-md-6">
                         <label class="form-label">字体颜色</label>
                         <input type="color" class="form-control form-control-color" 
@@ -209,15 +204,6 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/watermark.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
-<!-- 字体预加载 - 只保留 NotoSansSC -->
-<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/NotoSansSC-Regular.ttf') }}" crossorigin>
-<!-- 注释掉其他字体预加载
-<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/NotoSerifSC-Regular.ttf') }}" crossorigin>
-<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/HarmonyOS_Sans_SC_Regular.ttf') }}" crossorigin>
-<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/LXGWWenKai-Regular.ttf') }}" crossorigin>
-<link rel="preload" as="font" href="{{ url_for('static', filename='fonts/SourceHanSansCN-Regular.otf') }}" crossorigin>
--->
 {% endblock %}
 
 {% block extra_js %}
