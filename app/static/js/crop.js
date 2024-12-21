@@ -5,6 +5,11 @@ let processedImages = new Map();
 let currentImageIndex = 0;
 let currentAspectRatio = NaN;
 
+// 在文件顶部添加一个生成随机字符串的辅助函数
+function generateRandomString(length = 8) {
+    return Math.random().toString(36).substring(2, 2 + length);
+}
+
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
     initializeUpload();
@@ -208,89 +213,45 @@ async function downloadCurrentImage() {
     const imageUrl = processedImages.get(currentImageIndex);
     if (!imageUrl) return;
     
-    try {
-        showProgress('正在处理下载...');
-        
-        // 将 base64 图片数据转换为 Blob
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
-        
-        // 创建 FormData 对象
-        const formData = new FormData();
-        formData.append('image', blob, `cropped_${selectedFiles[currentImageIndex].name}`);
-        
-        // 发送到后端
-        const downloadResponse = await fetch('/download-cropped', {
-            method: 'POST',
-            body: formData
-        });
-        
-        if (!downloadResponse.ok) {
-            throw new Error('下载失败');
-        }
-        
-        // 获取文件并下载
-        const downloadBlob = await downloadResponse.blob();
-        const downloadUrl = URL.createObjectURL(downloadBlob);
-        const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = `cropped_${selectedFiles[currentImageIndex].name}`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(downloadUrl);
-        
-        hideProgress();
-        showToast('下载成功', 'success');
-    } catch (error) {
-        console.error('Download error:', error);
-        hideProgress();
-        showToast('下载失败', 'danger');
-    }
+    // 创建下载链接
+    const link = document.createElement('a');
+    link.href = imageUrl;
+    link.download = `cropped_${selectedFiles[currentImageIndex].name}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 async function downloadAllImages() {
     if (processedImages.size === 0) return;
     
     try {
-        showProgress('正在创建压缩包...');
+        showToast('正在创建压缩包...', 'info');
         
-        // 创建 FormData 对象
-        const formData = new FormData();
+        // 创建 JSZip 实例
+        const zip = new JSZip();
         
         // 添加所有处理过的图片
-        for (const [index, imageUrl] of processedImages.entries()) {
-            const response = await fetch(imageUrl);
-            const blob = await response.blob();
-            formData.append('images', blob, `cropped_${selectedFiles[index].name}`);
-        }
-        
-        // 发送到后端
-        const downloadResponse = await fetch('/download-all-cropped', {
-            method: 'POST',
-            body: formData
+        processedImages.forEach((imageUrl, index) => {
+            // 将 base64 转换为 blob
+            const imageData = imageUrl.split(',')[1];
+            zip.file(`cropped_${selectedFiles[index].name}`, imageData, {base64: true});
         });
         
-        if (!downloadResponse.ok) {
-            throw new Error('打包下载失败');
-        }
-        
-        // 获取压缩包并下载
-        const downloadBlob = await downloadResponse.blob();
-        const downloadUrl = URL.createObjectURL(downloadBlob);
+        // 生成并下载压缩包
+        const content = await zip.generateAsync({type: 'blob'});
         const link = document.createElement('a');
-        link.href = downloadUrl;
-        link.download = 'cropped_images.zip';
+        link.href = URL.createObjectURL(content);
+        const randomStr = generateRandomString();
+        link.download = `cropped_images_${randomStr}.zip`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        URL.revokeObjectURL(downloadUrl);
+        URL.revokeObjectURL(link.href);
         
-        hideProgress();
         showToast('下载成功', 'success');
     } catch (error) {
         console.error('Download error:', error);
-        hideProgress();
         showToast('打包下载失败', 'danger');
     }
 }
