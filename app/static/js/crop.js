@@ -92,7 +92,43 @@ function initializeControls() {
     });
     
     // 确认裁剪按钮
-    document.getElementById('cropBtn').addEventListener('click', processCrop);
+    document.getElementById('cropBtn').addEventListener('click', function() {
+        if (!cropper) return;
+        
+        // 获取裁剪数据
+        const canvas = cropper.getCroppedCanvas();
+        if (!canvas) {
+            showToast('裁剪失败，请重试', 'danger');
+            return;
+        }
+
+        // 将裁剪后的图片转换为 base64
+        const croppedImageUrl = canvas.toDataURL('image/png');
+        
+        // 保存处理后的图片
+        processedImages.set(currentImageIndex, croppedImageUrl);
+        
+        // 更新预览图片
+        const cropImage = document.getElementById('cropImage');
+        cropImage.src = croppedImageUrl;
+        
+        // 销毁当前的 cropper 实例
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        
+        // 使用新图片初始化 cropper
+        initCropper(cropImage);
+        
+        // 显示下载按钮
+        document.getElementById('downloadBtn').classList.remove('d-none');
+        if (selectedFiles.length > 1) {
+            document.getElementById('downloadAllBtn').classList.remove('d-none');
+        }
+        
+        showToast('裁剪成功', 'success');
+    });
     
     // 导航按钮
     document.getElementById('prevButton').addEventListener('click', showPreviousImage);
@@ -104,111 +140,36 @@ function initializeControls() {
 }
 
 // 显示图片
-function showImage(index, config = {}) {
+function showImage(index) {
+    if (index < 0 || index >= selectedFiles.length) return;
+    
     const file = selectedFiles[index];
-    const image = document.getElementById('cropImage');
+    const reader = new FileReader();
     
-    if (image.src) {
-        URL.revokeObjectURL(image.src);
-    }
-    
-    if (cropper) {
-        cropper.destroy();
-        cropper = null;
-    }
-    
-    const objectUrl = URL.createObjectURL(file);
-    image.src = objectUrl;
-    
-    image.onload = function() {
-        const options = {
-            viewMode: 2,
-            dragMode: 'move',
-            aspectRatio: config.aspectRatio || currentAspectRatio,
-            autoCropArea: 0.9,
-            restore: false,
-            guides: true,
-            center: true,
-            highlight: false,
-            cropBoxMovable: true,
-            cropBoxResizable: true,
-            toggleDragModeOnDblclick: false,
-            ready: () => {
-                if (config.initialCanvasData) {
-                    cropper.setCanvasData(config.initialCanvasData);
-                }
-                if (config.initialCropBoxData) {
-                    cropper.setCropBoxData(config.initialCropBoxData);
-                }
-            }
-        };
+    reader.onload = function(e) {
+        const cropImage = document.getElementById('cropImage');
         
-        cropper = new Cropper(image, options);
-        updateNavigationButtons();
+        // 如果存在已处理的图片，显示已处理的图片
+        if (processedImages.has(index)) {
+            cropImage.src = processedImages.get(index);
+        } else {
+            cropImage.src = e.target.result;
+        }
+        
+        // 销毁现有的 cropper 实例
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        
+        // 初始化新的 cropper
+        initCropper(cropImage);
+        
+        // 更新下载按钮状态
         updateDownloadButtons();
     };
-}
-
-// 处理裁剪
-async function processCrop() {
-    if (!cropper || !selectedFiles[currentImageIndex]) return;
     
-    try {
-        // 保存当前的裁剪器设置
-        const currentCropperData = cropper.getData();
-        const currentCanvasData = cropper.getCanvasData();
-        const currentContainerData = cropper.getContainerData();
-        
-        // 获取裁剪数据和图片数据
-        const cropData = cropper.getData(true);
-        const imageData = cropper.getImageData();
-        
-        // 验证裁剪区域是否有效
-        if (cropData.width <= 0 || cropData.height <= 0) {
-            throw new Error('裁剪区域太小');
-        }
-        
-        // 创建表单数据
-        const formData = new FormData();
-        formData.append('image', selectedFiles[currentImageIndex]);
-        formData.append('cropData', JSON.stringify({
-            ...cropData,
-            rotate: cropData.rotate,
-            scaleX: cropData.scaleX,
-            scaleY: cropData.scaleY,
-            naturalWidth: imageData.naturalWidth,
-            naturalHeight: imageData.naturalHeight
-        }));
-        
-        showProgress('正在处理图片...');
-        
-        const response = await fetch('/crop-image', {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-            processedImages.set(currentImageIndex, data.image_url);
-            showToast('裁剪成功', 'success');
-            updateDownloadButtons();
-            
-            // 重新初始化裁剪器，保持之前的状态
-            showImage(currentImageIndex, {
-                aspectRatio: currentAspectRatio,
-                initialCanvasData: currentCanvasData,
-                initialCropBoxData: currentCropperData
-            });
-        } else {
-            throw new Error(data.error || '处理失败');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        showToast(error.message || '处理失败', 'danger');
-    } finally {
-        hideProgress();
-    }
+    reader.readAsDataURL(file);
 }
 
 // 导航功能
@@ -248,32 +209,43 @@ async function downloadCurrentImage() {
     if (!imageUrl) return;
     
     try {
-        showProgress('准备下载...');
+        showProgress('正在处理下载...');
         
-        // 获取图片数据
+        // 将 base64 图片数据转换为 Blob
         const response = await fetch(imageUrl);
-        if (!response.ok) throw new Error('下载失败');
-        
         const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
         
-        // 创建下载链接
+        // 创建 FormData 对象
+        const formData = new FormData();
+        formData.append('image', blob, `cropped_${selectedFiles[currentImageIndex].name}`);
+        
+        // 发送到后端
+        const downloadResponse = await fetch('/download-cropped', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (!downloadResponse.ok) {
+            throw new Error('下载失败');
+        }
+        
+        // 获取文件并下载
+        const downloadBlob = await downloadResponse.blob();
+        const downloadUrl = URL.createObjectURL(downloadBlob);
         const link = document.createElement('a');
-        link.href = url;
+        link.href = downloadUrl;
         link.download = `cropped_${selectedFiles[currentImageIndex].name}`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl);
         
-        // 清理URL对象
-        window.URL.revokeObjectURL(url);
-        
-        showToast('下载开始', 'success');
+        hideProgress();
+        showToast('下载成功', 'success');
     } catch (error) {
         console.error('Download error:', error);
-        showToast('下载失败', 'danger');
-    } finally {
         hideProgress();
+        showToast('下载失败', 'danger');
     }
 }
 
@@ -283,57 +255,64 @@ async function downloadAllImages() {
     try {
         showProgress('正在创建压缩包...');
         
-        const zip = new JSZip();
-        const promises = [];
+        // 创建 FormData 对象
+        const formData = new FormData();
         
-        processedImages.forEach((imageUrl, index) => {
-            const promise = fetch(imageUrl)
-                .then(response => {
-                    if (!response.ok) throw new Error('获取图片失败');
-                    return response.blob();
-                })
-                .then(blob => {
-                    const filename = selectedFiles[index].name;
-                    zip.file(`cropped_${filename}`, blob);
-                })
-                .catch(error => {
-                    console.error(`Error processing image ${index}:`, error);
-                    showToast(`处理第 ${index + 1} 张图片失败`, 'warning');
-                });
-            promises.push(promise);
+        // 添加所有处理过的图片
+        for (const [index, imageUrl] of processedImages.entries()) {
+            const response = await fetch(imageUrl);
+            const blob = await response.blob();
+            formData.append('images', blob, `cropped_${selectedFiles[index].name}`);
+        }
+        
+        // 发送到后端
+        const downloadResponse = await fetch('/download-all-cropped', {
+            method: 'POST',
+            body: formData
         });
         
-        await Promise.all(promises);
+        if (!downloadResponse.ok) {
+            throw new Error('打包下载失败');
+        }
         
-        // 生成压缩包
-        showProgress('正在生成压缩包...');
-        const content = await zip.generateAsync({
-            type: 'blob',
-            compression: 'DEFLATE',
-            compressionOptions: {
-                level: 6
-            }
-        });
-        
-        // 下载压缩包
-        const url = window.URL.createObjectURL(content);
+        // 获取压缩包并下载
+        const downloadBlob = await downloadResponse.blob();
+        const downloadUrl = URL.createObjectURL(downloadBlob);
         const link = document.createElement('a');
-        link.href = url;
-        link.download = `cropped_images_${new Date().getTime()}.zip`;
+        link.href = downloadUrl;
+        link.download = 'cropped_images.zip';
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        URL.revokeObjectURL(downloadUrl);
         
-        // 清理URL对象
-        window.URL.revokeObjectURL(url);
-        
-        showToast('下载已开始', 'success');
-    } catch (error) {
-        console.error('Error:', error);
-        showToast('创建压缩包失败', 'danger');
-    } finally {
         hideProgress();
+        showToast('下载成功', 'success');
+    } catch (error) {
+        console.error('Download error:', error);
+        hideProgress();
+        showToast('打包下载失败', 'danger');
     }
+}
+
+// 辅助函数：将 base64 转换为 blob
+function b64toBlob(b64Data, contentType = '', sliceSize = 512) {
+    const byteCharacters = atob(b64Data);
+    const byteArrays = [];
+    
+    for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+        const slice = byteCharacters.slice(offset, offset + sliceSize);
+        const byteNumbers = new Array(slice.length);
+        
+        for (let i = 0; i < slice.length; i++) {
+            byteNumbers[i] = slice.charCodeAt(i);
+        }
+        
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+    }
+    
+    return new Blob(byteArrays, {type: contentType});
 }
 
 // 更新下载按钮状态
@@ -425,4 +404,31 @@ function showToast(message, type = 'info') {
     toast.addEventListener('hidden.bs.toast', () => {
         document.body.removeChild(toast);
     });
+}
+
+// 初始化 Cropper
+function initCropper(image) {
+    const options = {
+        viewMode: 2,
+        dragMode: 'move',
+        aspectRatio: currentAspectRatio,
+        autoCropArea: 0.9,
+        restore: false,
+        guides: true,
+        center: true,
+        highlight: false,
+        cropBoxMovable: true,
+        cropBoxResizable: true,
+        toggleDragModeOnDblclick: false,
+        ready: function() {
+            // 更新缩放滑块的值
+            const zoomRange = document.getElementById('zoomRange');
+            if (zoomRange) {
+                zoomRange.value = 1;
+            }
+        }
+    };
+    
+    cropper = new Cropper(image, options);
+    updateNavigationButtons();
 }

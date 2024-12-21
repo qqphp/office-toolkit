@@ -509,3 +509,81 @@ def crop_image():
     except Exception as e:
         current_app.logger.error(f"处理图片失败: {str(e)}")
         return jsonify({'error': '处理失败'}), 500
+
+@main_bp.route('/download-cropped', methods=['POST'])
+def download_cropped():
+    """处理单张裁剪图片的下载"""
+    if 'image' not in request.files:
+        return jsonify({'error': '没有上传文件'}), 400
+        
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'error': '未选择文件'}), 400
+        
+    try:
+        # 生成唯一文件名，使用完整的 uuid
+        original_ext = os.path.splitext(file.filename)[1].lower()
+        filename = f"crop_{uuid.uuid4().hex}{original_ext}"
+        
+        # 保存裁剪后的图片
+        save_path = os.path.join(current_app.static_folder, 'uploads', 'crop', filename)
+        os.makedirs(os.path.dirname(save_path), exist_ok=True)
+        file.save(save_path)
+        
+        return send_file(
+            save_path,
+            mimetype='image/png',
+            as_attachment=True,
+            download_name=f"cropped_{os.path.basename(file.filename)}"  # 下载时使用原文件名
+        )
+    except Exception as e:
+        current_app.logger.error(f"下载裁剪图片失败: {str(e)}")
+        return jsonify({'error': '下载失败'}), 500
+
+@main_bp.route('/download-all-cropped', methods=['POST'])
+def download_all_cropped():
+    """处理多张裁剪图片的打包下载"""
+    if 'images' not in request.files:
+        return jsonify({'error': '没有上传文件'}), 400
+        
+    files = request.files.getlist('images')
+    if not files:
+        return jsonify({'error': '没有选择文件'}), 400
+        
+    try:
+        # 创建ZIP文件
+        memory_file = BytesIO()
+        with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+            for i, file in enumerate(files):
+                if file.filename:
+                    # 生成唯一文件名，使用完整的 uuid
+                    original_ext = os.path.splitext(file.filename)[1].lower()
+                    filename = f"crop_{uuid.uuid4().hex}{original_ext}"
+                    
+                    # 保存裁剪后的图片
+                    save_path = os.path.join(current_app.static_folder, 'uploads', 'crop', filename)
+                    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+                    file.save(save_path)
+                    
+                    # 添加到zip文件，使用原始文件名
+                    zf.write(save_path, f"cropped_{os.path.basename(file.filename)}")
+        
+        memory_file.seek(0)
+        timestamp = time.strftime('%Y%m%d_%H%M%S')
+        
+        response = send_file(
+            memory_file,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=f'cropped_images_{timestamp}.zip'
+        )
+        
+        # 添加响应头，防止缓存
+        response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+        
+        return response
+    except Exception as e:
+        current_app.logger.error(f"打包下载裁剪图片失败: {str(e)}")
+        return jsonify({'error': '打包下载失败'}), 500
