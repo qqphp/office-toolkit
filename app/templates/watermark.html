@@ -117,10 +117,12 @@
                         <label class="form-label">字体选择</label>
                         <select class="form-select" id="watermarkFont">
                             <option value="noto-sans">思源黑体</option>
+                            <!-- 注释掉其他字体选项
                             <option value="noto-serif">思源宋体</option>
                             <option value="harmony-sans">鸿蒙字体</option>
                             <option value="lxgw">霞鹜文楷</option>
                             <option value="source-han">思源黑体 CN</option>
+                            -->
                         </select>
                     </div>
                     
@@ -208,12 +210,14 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/watermark.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='css/fonts.css') }}">
-<!-- 字体预加载 -->
+<!-- 字体预加载 - 只保留 NotoSansSC -->
 <link rel="preload" as="font" href="{{ url_for('static', filename='fonts/NotoSansSC-Regular.ttf') }}" crossorigin>
+<!-- 注释掉其他字体预加载
 <link rel="preload" as="font" href="{{ url_for('static', filename='fonts/NotoSerifSC-Regular.ttf') }}" crossorigin>
 <link rel="preload" as="font" href="{{ url_for('static', filename='fonts/HarmonyOS_Sans_SC_Regular.ttf') }}" crossorigin>
 <link rel="preload" as="font" href="{{ url_for('static', filename='fonts/LXGWWenKai-Regular.ttf') }}" crossorigin>
 <link rel="preload" as="font" href="{{ url_for('static', filename='fonts/SourceHanSansCN-Regular.otf') }}" crossorigin>
+-->
 {% endblock %}
 
 {% block extra_js %}

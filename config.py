@@ -2,7 +2,7 @@ import os
 
 class Config:
     # Debug and port configuration
-    DEBUG = False  # 直接设置为 False，不使用环境变量
+    DEBUG = True  # 直接设置为 False，不使用环境变量
     HOST = '0.0.0.0'  # 直接设置固定主机
     PORT = 5001   # 直接设置固定端口
     
