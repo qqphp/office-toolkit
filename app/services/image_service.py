@@ -1,238 +1,113 @@
-from rembg import remove, new_session
-from PIL import Image
-import os
+from alibabacloud_imageseg20191230.client import Client as imageseg20191230Client
+from alibabacloud_tea_openapi import models as open_api_models
+from alibabacloud_imageseg20191230 import models as imageseg_20191230_models
+from alibabacloud_tea_util import models as util_models
 from flask import current_app
+import base64
+from PIL import Image
+import io
+import os
 import uuid
-import numpy as np
-from .face_detection import FaceDetector
-from typing import Tuple
+import time
 
-def is_portrait_image(image: Image.Image) -> bool:
+def create_ali_client():
     """
-    综合判断图片是否为人像
+    创建阿里云客户端
+    """
+    config = open_api_models.Config(
+        access_key_id=current_app.config['ALIBABA_CLOUD_ACCESS_KEY_ID'],
+        access_key_secret=current_app.config['ALIBABA_CLOUD_ACCESS_KEY_SECRET']
+    )
+    config.endpoint = current_app.config['ALIBABA_CLOUD_ENDPOINT']
+    return imageseg20191230Client(config)
+
+def get_async_job_result(client, job_id: str, max_retries: int = 10, retry_interval: int = 2):
+    """
+    获取异步任务的处理结果
     
     Args:
-        image: PIL Image对象
-    
-    Returns:
-        bool: 是否为人像
+        client: 阿里云客户端
+        job_id: 任务ID
+        max_retries: 最大重试次数
+        retry_interval: 重试间隔(秒)
     """
-    # 转换为numpy数组
-    img_array = np.array(image)
-    
-    # 初始化人脸检测器
-    face_detector = FaceDetector(current_app.config['CASCADE_PATH'])
-    
-    # 特征1: 检查图像比例
-    height, width = img_array.shape[:2]
-    aspect_ratio = height / width
-    is_portrait_ratio = 0.75 < aspect_ratio < 2.5  # 更宽松的比例范围
-    
-    # 特征2: 检测肤色比例
-    skin_ratio = face_detector.detect_skin_tone(img_array)
-    has_skin = skin_ratio > 0.05  # 至少5%的肤色像素
-    
-    # 特征3: 人脸检测
-    has_face = face_detector.detect_faces(img_array)
-    
-    # 综合判断
-    # 1. 如果检测到人脸，直接判定为人像
-    if has_face:
-        return True
-    
-    # 2. 比例合适且有足够的肤色像素，判定为人像
-    if is_portrait_ratio and has_skin:
-        return True
-    
-    # 3. 如果肤色比例特别高，也判定为人像
-    if skin_ratio > 0.15:  # 超过15%的肤色像素
-        return True
-    
-    return False
-
-def detect_image_type(image: Image.Image) -> Tuple[str, dict]:
-    """
-    检测图片类型，选择合适的模型和参数
-    
-    Args:
-        image: PIL Image对象
-    
-    Returns:
-        Tuple[str, dict]: (模型名称, 模型特定参数)
-    """
-    try:
-        # 转换为numpy数组进行分析
-        img_array = np.array(image)
-        face_detector = FaceDetector(current_app.config['CASCADE_PATH'])
-        
-        # 检测是否为人像
-        if is_portrait_image(image):
-            return "u2net_human_seg", {
-                'alpha_matting_foreground_threshold': 240,
-                'alpha_matting_background_threshold': 10,
-                'alpha_matting_erode_size': 5,
-                'post_process_mask': True
-            }
-        
-        # 检测图像尺寸和比例
-        height, width = img_array.shape[:2]
-        aspect_ratio = height / width
-        
-        # 对于细长的图像（如全身照或长条形物体），使用silueta模型
-        if aspect_ratio > 2.0 or aspect_ratio < 0.5:
-            return "silueta", {
-                'alpha_matting_foreground_threshold': 250,
-                'alpha_matting_background_threshold': 5,
-                'alpha_matting_erode_size': 15,
-                'post_process_mask': True
-            }
-        
-        # 对于大尺寸复杂图像，使用isnet-general-use模型
-        if max(width, height) > 2000:
-            return "isnet-general-use", {
-                'alpha_matting_foreground_threshold': 240,
-                'alpha_matting_background_threshold': 15,
-                'alpha_matting_erode_size': 10,
-                'post_process_mask': True
-            }
-        
-        # 对于小尺寸图像，使用轻量级的u2netp模型
-        if max(width, height) < 512:
-            return "u2netp", {
-                'alpha_matting_foreground_threshold': 230,
-                'alpha_matting_background_threshold': 20,
-                'alpha_matting_erode_size': 3,
-                'post_process_mask': True
-            }
-        
-        # 默认使用u2net通用模型
-        return "u2net", {
-            'alpha_matting_foreground_threshold': 250,
-            'alpha_matting_background_threshold': 5,
-            'alpha_matting_erode_size': 10,
-            'post_process_mask': True
-        }
-        
-    except Exception as e:
-        current_app.logger.warning(f"像型检测失败: {str(e)}, 使用默认模型")
-        return "u2net", {
-            'alpha_matting_foreground_threshold': 250,
-            'alpha_matting_background_threshold': 5,
-            'alpha_matting_erode_size': 10,
-            'post_process_mask': True
-        }
-
-def optimize_image(image: Image.Image, max_size: int = 3072) -> Image.Image:
-    """
-    优化图像大小和格式,保持更高质量
-    """
-    # 增加最大尺寸以保持更多细节
-    if max(image.size) > max_size:
-        ratio = max_size / max(image.size)
-        new_size = tuple(int(dim * ratio) for dim in image.size)
-        image = image.resize(new_size, Image.Resampling.LANCZOS)
-    
-    # 确保图像模式正确,保持原始颜色空间
-    if image.mode not in ('RGB', 'RGBA'):
-        image = image.convert('RGBA' if 'A' in image.mode else 'RGB')
-    
-    return image
+    for i in range(max_retries):
+        try:
+            request = imageseg_20191230_models.GetAsyncJobResultRequest(job_id=job_id)
+            response = client.get_async_job_result(request)
+            
+            if response.body.data.status == "PROCESS_SUCCESS":
+                # 任务处理成功，解析结果
+                import json
+                result = json.loads(response.body.data.result)
+                return result
+            elif response.body.data.status == "PROCESS_FAILED":
+                # 任务处理失败
+                raise Exception(f"图片处理失败: 任务执行失败")
+            else:
+                # 任务仍在处理中，等待后重试
+                time.sleep(retry_interval)
+                continue
+                
+        except Exception as e:
+            current_app.logger.error(f"获取异步任务结果失败: {str(e)}")
+            raise
+            
+    raise Exception("任务处理超时")
 
 def remove_background(input_path: str) -> str:
     """
-    移除图片背景并保存处理后的图片
+    使用阿里云通用高清分割服务移除图片背景
     """
-    # 设置环境变量
-    os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
-    
-    # 使用绝对路径并指向u2net子目录
-    # 获取项目根目录的绝对路径
-    root_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    u2net_path = os.path.join(root_dir, current_app.config['U2NET_HOME'])
-    os.environ['U2NET_HOME'] = u2net_path
-    
-    os.environ['OMP_NUM_THREADS'] = '1'
-    os.environ['ONNXRUNTIME_PROVIDER'] = 'CPUExecutionProvider'
-    os.environ['ONNXRUNTIME_PROVIDERS'] = '["CPUExecutionProvider"]'
-    
-    # 确保模型目录存在
-    os.makedirs(u2net_path, exist_ok=True)
-    
-    # 检查并修正模型文件名
-    model_map = {
-        'u2net': 'u2net.onnx',
-        'u2netp': 'u2netp.onnx',
-        'u2net_human_seg': 'u2net_human_seg.onnx',
-        'silueta': 'silueta.onnx',
-        'isnet-general-use': 'isnet-general-use.onnx'
-    }
-    
-    # 预先检查所需模型是否存在
-    model_name, _ = detect_image_type(Image.open(input_path))
-    model_file = os.path.join(u2net_path, model_map[model_name])
-    
-    if not os.path.exists(model_file):
-        raise FileNotFoundError(f"模型文件不存在: {model_file}")
-    
-    output_filename = f"{uuid.uuid4()}.png"
-    output_path = os.path.join(current_app.config['REMOVE_BG_FOLDER'], output_filename)
-    
-    os.makedirs(os.path.dirname(output_path), exist_ok=True)
-    
     try:
-        input_image = Image.open(input_path)
-        input_image = optimize_image(input_image)
+        # 创建客户端
+        client = create_ali_client()
         
-        # 获取模型名称和特定参数
-        model_name, model_params = detect_image_type(input_image)
+        # 使用文件流方式读取图片
+        with open(input_path, 'rb') as f:
+            # 创建请求
+            request = imageseg_20191230_models.SegmentHDCommonImageAdvanceRequest(
+                image_url_object=f  # 正确的参数名是 image_url_object 而不是 image_urlobject
+            )
+            runtime = util_models.RuntimeOptions()
+            
+            # 调用API
+            response = client.segment_hdcommon_image_advance(request, runtime)
+
+            # 获取任务ID
+            job_id = response.body.request_id
         
-        # 指定仅使用CPU的会话
-        session = new_session(
-            model_name=model_name,
-            providers=['CPUExecutionProvider']
-        )
+        # 获取异步处理结果
+        result = get_async_job_result(client, job_id)
         
-        # 基础参数
-        remove_params = {
-            'session': session,
-            'alpha_matting': True,
-            'post_process_mask': True,
-            'only_mask': False,
-            'bgcolor': None,
-        }
-        
-        # 合并模型特定参数
-        remove_params.update(model_params)
-        
-        # 移除背景
-        output_image = remove(input_image, **remove_params)
-        
-        # 后处理优化
-        if output_image.mode == 'RGBA':
-            # 提高透明度的精确度
-            alpha = output_image.split()[3]
-            # 根据模型类型调整透明度阈值
-            threshold = model_params.get('alpha_matting_background_threshold', 5)
-            # 使用更平滑的透明度过渡
-            alpha = alpha.point(lambda x: max(0, min(255, int(1.5 * x))) if x > threshold else 0)
-            r, g, b, _ = output_image.split()
-            output_image = Image.merge('RGBA', (r, g, b, alpha))
-        
-        # 保存处理后的图片
-        output_image.save(
-            output_path, 
-            'PNG',
-            optimize=True,
-            quality=100,
-            compress_level=1
-        )
-        
-        os.remove(input_path)
-        return f"/static/uploads/remove_bg/{output_filename}"
-        
+        if result and 'imageUrl' in result:
+            # 处理返回的图片URL
+            result_image_url = result['imageUrl']
+            
+            # 下载处理后的图片
+            import requests
+            result_image_content = requests.get(result_image_url).content
+            
+            # 生成输出文件名
+            output_filename = f"{uuid.uuid4()}.png"
+            output_path = os.path.join(current_app.config['REMOVE_BG_FOLDER'], output_filename)
+            
+            # 确保输出目录存在
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            
+            # 保存处理后的图片
+            with open(output_path, 'wb') as f:
+                f.write(result_image_content)
+            
+            # 清理原始文件
+            os.remove(input_path)
+            
+            return f"/static/uploads/remove_bg/{output_filename}"
+        else:
+            raise Exception("图片处理失败：未获取到有效的图片URL")
+            
     except Exception as e:
+        current_app.logger.error(f"移除背景失败: {str(e)}")
         if os.path.exists(input_path):
             os.remove(input_path)
-        if os.path.exists(output_path):
-            os.remove(output_path)
-        raise e
+        raise Exception(f"处理图片时发生错误: {str(e)}")

@@ -41,7 +41,7 @@ class BackgroundService:
         except Exception as e:
             self.cleanup()
             current_app.logger.error(f"处理图片失败: {str(e)}")
-            raise
+            raise Exception("图片处理失败，请确保图片格式正确且大小适中")
     
     def cleanup(self):
         """清理临时文件"""
