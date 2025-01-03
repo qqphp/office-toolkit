@@ -7,10 +7,7 @@ from pathlib import Path
 def test_cleanup():
     # 创建应用实例
     app = create_app()
-    
-    # 获取上传目录的绝对路径
     uploads_dir = os.path.join(app.root_path, 'static', 'uploads')
-    print(f"\nUploads directory: {uploads_dir}")
     
     # 创建测试文件的函数
     def create_test_files(directory):
@@ -23,7 +20,6 @@ def test_cleanup():
             if not os.path.exists(gitkeep_path):
                 with open(gitkeep_path, 'w') as f:
                     f.write('')
-                print(f"Created .gitkeep in: {directory}")
             
             # 创建3个测试文件
             created_files = []
@@ -32,7 +28,6 @@ def test_cleanup():
                 with open(filepath, 'w') as f:
                     f.write(f'test content {i+1}')
                 created_files.append(filepath)
-                print(f"Created test file: {filepath}")
             
             return created_files
                 
@@ -44,7 +39,7 @@ def test_cleanup():
     test_files = []
     directories = ['remove_bg', 'img_to_pdf', 'watermark', 'compress', 'blur_face', 'crop']
     
-    print("\nCreating test files...")
+    print("Creating test files...")
     for subdir in directories:
         dir_path = os.path.join(uploads_dir, subdir)
         files = create_test_files(dir_path)
@@ -54,7 +49,7 @@ def test_cleanup():
         print("No test files were created!")
         return
     
-    print(f"\nCreated {len(test_files)} test files")
+    print(f"Created {len(test_files)} test files")
     
     # 运行清理服务
     print("\nRunning cleanup service...")
@@ -63,20 +58,18 @@ def test_cleanup():
     
     # 验证结果
     print("\nVerifying results...")
+    all_correct = True
     for subdir in directories:
         dir_path = os.path.join(uploads_dir, subdir)
         remaining_files = os.listdir(dir_path)
-        print(f"\nDirectory: {dir_path}")
-        print(f"Remaining files: {remaining_files}")
         
         # 验证是否只剩下.gitkeep
-        if len(remaining_files) == 1 and remaining_files[0] == '.gitkeep':
-            print("✓ Only .gitkeep remains - correct!")
-        else:
-            print("✗ Unexpected files remain!")
-            for file in remaining_files:
-                if file != '.gitkeep':
-                    print(f"  - Unexpected file: {file}")
+        if not (len(remaining_files) == 1 and remaining_files[0] == '.gitkeep'):
+            all_correct = False
+            print(f"Directory {subdir}: Unexpected files remain: {remaining_files}")
+    
+    if all_correct:
+        print("✓ All directories cleaned successfully - only .gitkeep files remain")
 
 if __name__ == "__main__":
     test_cleanup()

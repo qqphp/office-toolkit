@@ -38,7 +38,7 @@ def create_app(config_class=Config):
         id='cleanup_old_files',
         func=cleanup_job,
         trigger='interval',
-        minutes=1  # 每1分钟执行一次清理
+        minutes=30  # 每30分钟执行一次清理
     )
     
     # 启动调度器
