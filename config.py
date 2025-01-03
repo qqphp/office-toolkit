@@ -30,3 +30,7 @@ class Config:
 
     # 图片裁剪目录配置
     CROP_FOLDER = os.path.join(UPLOAD_FOLDER, 'crop')
+
+    # APScheduler配置
+    SCHEDULER_API_ENABLED = True
+    SCHEDULER_TIMEZONE = "Asia/Shanghai"
