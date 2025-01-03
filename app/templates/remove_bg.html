@@ -11,9 +11,29 @@
                 </div>
                 <p class="mb-3">将图片拖放到这里，或点击上传</p>
                 <input type="file" id="fileInput" class="d-none" accept="image/*" multiple>
-                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                <button class="btn btn-primary mb-3" onclick="document.getElementById('fileInput').click()">
                     选择图片（可多选）
                 </button>
+                <div class="upload-requirements small text-muted">
+                    <div class="requirements-grid">
+                        <div class="requirement-item">
+                            <i class="bi bi-file-earmark-image me-1"></i>
+                            支持格式：PNG、JPEG、JPG、BMP
+                        </div>
+                        <div class="requirement-item">
+                            <i class="bi bi-arrows-angle-expand me-1"></i>
+                            分辨率：32×32 至 10000×10000像素
+                        </div>
+                        <div class="requirement-item">
+                            <i class="bi bi-file-earmark-text me-1"></i>
+                            文件大小：最大40 MB
+                        </div>
+                        <div class="requirement-item">
+                            <i class="bi bi-exclamation-circle me-1"></i>
+                            URL地址中不能包含中文字符
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <div id="progressContainer" class="progress-section mt-4 d-none">

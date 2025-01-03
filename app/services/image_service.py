@@ -3,12 +3,11 @@ from alibabacloud_tea_openapi import models as open_api_models
 from alibabacloud_imageseg20191230 import models as imageseg_20191230_models
 from alibabacloud_tea_util import models as util_models
 from flask import current_app
-import base64
-from PIL import Image
-import io
 import os
 import uuid
 import time
+import json
+import requests
 
 def create_ali_client():
     """
@@ -38,7 +37,6 @@ def get_async_job_result(client, job_id: str, max_retries: int = 10, retry_inter
             
             if response.body.data.status == "PROCESS_SUCCESS":
                 # 任务处理成功，解析结果
-                import json
                 result = json.loads(response.body.data.result)
                 return result
             elif response.body.data.status == "PROCESS_FAILED":
@@ -85,7 +83,6 @@ def remove_background(input_path: str) -> str:
             result_image_url = result['imageUrl']
             
             # 下载处理后的图片
-            import requests
             result_image_content = requests.get(result_image_url).content
             
             # 生成输出文件名
