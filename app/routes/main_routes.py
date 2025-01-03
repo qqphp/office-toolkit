@@ -587,3 +587,7 @@ def download_all_cropped():
     except Exception as e:
         current_app.logger.error(f"打包下载裁剪图片失败: {str(e)}")
         return jsonify({'error': '打包下载失败'}), 500
+
+@main_bp.app_errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404

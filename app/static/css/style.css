@@ -105,3 +105,41 @@ main {
 .footer {
     margin-top: auto;
 }
+
+/* 404页面样式 */
+.error-page {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+}
+
+.error-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .error-page .section-title {
+        font-size: 2rem;
+    }
+    
+    .error-page .section-subtitle {
+        font-size: 1rem;
+    }
+    
+    .error-icon .bi {
+        font-size: 4rem;
+    }
+}
