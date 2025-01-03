@@ -61,12 +61,15 @@ function handleFiles(files) {
     // 显示导航按钮
     document.querySelector('.image-navigation').classList.remove('d-none');
     
-    // 显示进度条
+    // 重置并显示进度条
     const progressContainer = document.getElementById('progressContainer');
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
     
     progressContainer.classList.remove('d-none');
+    // 重置进度条状态
+    progressBar.classList.remove('bg-danger', 'bg-success');
+    progressBar.classList.add('progress-bar-striped', 'progress-bar-animated');
     progressBar.style.width = '0%';
     progressBar.setAttribute('aria-valuenow', 0);
     progressText.innerHTML = `<span class="badge bg-primary">准备处理 ${validFiles.length} 张图片</span>`;
@@ -79,14 +82,12 @@ function handleFiles(files) {
 function processImage(index) {
     if (index >= selectedFiles.length) {
         // 处理完成后更新进度条和提示信息
+        const progressBar = document.getElementById('progressBar');
+        progressBar.classList.remove('progress-bar-animated', 'progress-bar-striped', 'bg-danger');
+        progressBar.classList.add('bg-success');
         updateProgress(100, `已完成 ${selectedFiles.length} 张图片处理`);
         // 显示下载按钮
         document.getElementById('downloadAllBtn').classList.remove('d-none');
-        // 将进度条变为成功状态
-        const progressBar = document.getElementById('progressBar');
-        progressBar.classList.remove('progress-bar-animated');
-        progressBar.classList.remove('progress-bar-striped');
-        progressBar.classList.add('bg-success');
         return;
     }
     
@@ -258,4 +259,25 @@ function handleDrop(e) {
 function showToast(message, type = 'info') {
     // 如果项目中有使用 Bootstrap Toast 或其他提示组件，在这里实现
     console.log(`${type}: ${message}`);
+}
+
+// 在开始处理新图片时重置进度条状态
+function resetProgressBar() {
+    const progressBar = document.getElementById('progressBar');
+    progressBar.style.width = '0%';
+    progressBar.setAttribute('aria-valuenow', 0);
+    // 移除可能存在的错误状态样式
+    progressBar.classList.remove('bg-danger');
+    // 恢复默认的进度条样式
+    progressBar.classList.add('progress-bar-striped', 'progress-bar-animated');
+}
+
+// 在处理图片的函数开始处添加重置进度条的调用
+function processImages(files) {
+    // 重置进度条状态
+    resetProgressBar();
+    
+    // 显示进度条容器
+    document.getElementById('progressContainer').classList.remove('d-none');
+    // ... 其余处理逻辑保持不变 ...
 } 
