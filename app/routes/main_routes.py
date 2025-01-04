@@ -591,3 +591,7 @@ def download_all_cropped():
 @main_bp.app_errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
+@main_bp.route('/sitemap.xml')
+def sitemap():
+    return send_file('static/sitemap.xml', mimetype='application/xml')
