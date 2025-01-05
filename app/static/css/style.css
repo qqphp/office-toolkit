@@ -198,3 +198,24 @@ main {
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
+
+/* 友情链接样式 */
+.link-secondary {
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.link-secondary:hover {
+    color: #0d6efd;
+}
+
+.gap-3 {
+    gap: 1rem !important;
+}
+
+/* 在移动端优化友情链接的显示 */
+@media (max-width: 576px) {
+    .gap-3 {
+        gap: 0.5rem !important;
+    }
+}
