@@ -143,3 +143,27 @@ main {
         font-size: 4rem;
     }
 }
+
+/* 添加社交媒体图标颜色 */
+.bi-wechat {
+    color: #07C160;
+}
+
+.bi-tencent-qq {
+    color: #12B7F5;
+}
+
+/* 让图标颜色过渡更平滑 */
+.bi-wechat,
+.bi-tencent-qq {
+    transition: color 0.3s ease;
+}
+
+/* 鼠标悬停时的效果 */
+.bi-wechat:hover {
+    color: #06ae56;
+}
+
+.bi-tencent-qq:hover {
+    color: #10a5dc;
+}
