@@ -144,5 +144,24 @@
     {{ bootstrap.load_js() }}
     {% block extra_js %}{% endblock %}
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="contactModalLabel">商务合作</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p class="mb-3">我专注于微信小程序、APP开发、业务系统开发以及官网定制，提供量身定制的解决方案，帮助您的项目更高效、更优质地落地。无论是从零开始，还是已有项目的二次开发，我都能为您提供专业的技术支持和服务。</p>
+                    <p class="mb-4">扫码加我微信，我们聊聊您的需求，让我们一起将您的创意变为现实！</p>
+                    <img src="{{ url_for('static', filename='images/wechat-qr.png') }}" 
+                         alt="微信二维码" 
+                         class="img-fluid mb-3" 
+                         style="max-width: 200px;">
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html> 

@@ -167,3 +167,34 @@ main {
 .bi-tencent-qq:hover {
     color: #10a5dc;
 }
+
+/* 弹窗样式优化 */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+    padding: 1rem 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.modal-body p {
+    color: #4a4a4a;
+    line-height: 1.6;
+}
+
+.modal-body img {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
