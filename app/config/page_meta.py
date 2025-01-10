@@ -40,12 +40,12 @@ PAGE_META = {
         'description': '图优助手提供免费的在线图片裁剪工具，支持批量处理，支持自定义裁剪区域，支持自定义裁剪文件名。',
         'keywords': '图片处理, 图片背景透明, 图片转PDF, 在线工具, 免费工具, 图片压缩, 图片水印, 图片模糊面部, 图片裁剪'
     },
-    'main.pdf_to_word': {
+    'pdf_to_word.pdf_to_word_page': {
         'title': '图优助手 - 在线PDF转Word工具',
         'description': '图优助手提供免费的在线PDF转Word工具，支持批量处理，支持自定义转换文件名。',
         'keywords': '图片处理, 图片背景透明, 图片转PDF, 在线工具, 免费工具, 图片压缩, 图片水印, 图片模糊面部, 图片裁剪'
     },
-    'main.pdf_encrypt': {
+    'pdf_encrypt.pdf_encrypt_page': {
         'title': '图优助手 - 在线PDF加密工具',
         'description': '图优助手提供免费的在线PDF加密工具，支持批量处理，支持自定义加密文件名。',
         'keywords': '图片处理, 图片背景透明, 图片转PDF, 在线工具, 免费工具, 图片压缩, 图片水印, 图片模糊面部, 图片裁剪'
