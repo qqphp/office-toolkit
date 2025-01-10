@@ -216,18 +216,6 @@
                 </div>
             </div>
 
-            <!-- 图片裁剪功能 -->
-            <div class="col-md-6 col-lg-4">
-                <div class="card h-100 feature-card animate-on-scroll">
-                    <div class="card-body text-center p-4">
-                        <i class="bi bi-crop feature-icon mb-3"></i>
-                        <h3 class="h4 mb-3">图片裁剪</h3>
-                        <p class="text-muted">智能裁剪工具，支持自由裁剪、固定比例裁剪，轻松调整图片构图。</p>
-                        <a href="{{ url_for('main.crop') }}" class="btn btn-outline-primary mt-3">开始使用</a>
-                    </div>
-                </div>
-            </div>
-
             <!-- 图片压缩功能 -->
             <div class="col-md-6 col-lg-4">
                 <div class="card h-100 feature-card animate-on-scroll">
@@ -248,6 +236,42 @@
                         <h3 class="h4 mb-3">模糊面部</h3>
                         <p class="text-muted">自动识别并模糊图片中的人脸，保护隐私，支持批量处理。</p>
                         <a href="{{ url_for('main.blur_face') }}" class="btn btn-outline-primary mt-3">开始使用</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图片裁剪功能 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 feature-card animate-on-scroll">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-crop feature-icon mb-3"></i>
+                        <h3 class="h4 mb-3">图片裁剪</h3>
+                        <p class="text-muted">智能裁剪工具，支持自由裁剪、固定比例裁剪，轻松调整图片构图。</p>
+                        <a href="{{ url_for('main.crop') }}" class="btn btn-outline-primary mt-3">开始使用</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF转Word功能 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 feature-card animate-on-scroll">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-file-earmark-word feature-icon mb-3"></i>
+                        <h3 class="h4 mb-3">PDF转Word</h3>
+                        <p class="text-muted">快速将PDF文档转换为可编辑的Word格式，保持原有格式和排版，提高办公效率。</p>
+                        <a href="{{ url_for('pdf_to_word.pdf_to_word_page') }}" class="btn btn-outline-primary mt-3">开始使用</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF加密功能 -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 feature-card animate-on-scroll">
+                    <div class="card-body text-center p-4">
+                        <i class="bi bi-file-earmark-lock feature-icon mb-3"></i>
+                        <h3 class="h4 mb-3">PDF加密</h3>
+                        <p class="text-muted">为PDF文档添加密码保护，确保文件安全性，支持自定义密码设置。</p>
+                        <a href="{{ url_for('pdf_encrypt.pdf_encrypt_page') }}" class="btn btn-outline-primary mt-3">开始使用</a>
                     </div>
                 </div>
             </div>
