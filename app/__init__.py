@@ -7,6 +7,7 @@ import os
 from datetime import datetime
 from app.services.cleanup_service import CleanupService
 from functools import partial
+from app.routes import register_blueprints
 
 bootstrap = Bootstrap5()
 scheduler = APScheduler()
@@ -30,15 +31,13 @@ def create_app(config_class=Config):
     
     # 注册定时任务
     cleanup_service = CleanupService()
-    
-    # 创建一个偏函数，将app作为参数传递给cleanup_old_files
     cleanup_job = partial(cleanup_service.cleanup_old_files, app)
     
     scheduler.add_job(
         id='cleanup_old_files',
         func=cleanup_job,
         trigger='interval',
-        minutes=30  # 每30分钟执行一次清理
+        minutes=30
     )
     
     # 启动调度器
@@ -47,9 +46,8 @@ def create_app(config_class=Config):
     # 注册全局函数
     app.jinja_env.globals.update(get_page_meta=get_page_meta)
     
-    # 注册蓝图
-    from app.routes.main_routes import main_bp
-    app.register_blueprint(main_bp)
+    # 注册所有蓝图
+    register_blueprints(app)
     
     @app.context_processor
     def utility_processor():

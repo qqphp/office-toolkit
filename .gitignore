@@ -40,6 +40,8 @@ app/static/uploads/blur_face/*
 !app/static/uploads/blur_face/.gitkeep
 app/static/uploads/crop/*
 !app/static/uploads/crop/.gitkeep
+app/static/uploads/pdf_to_word/*
+!app/static/uploads/pdf_to_word/.gitkeep
 
 - app/models/*
 - !app/models/.gitkeep
