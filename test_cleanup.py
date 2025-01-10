@@ -37,7 +37,7 @@ def test_cleanup():
 
     # 创建测试文件
     test_files = []
-    directories = ['remove_bg', 'img_to_pdf', 'watermark', 'compress', 'blur_face', 'crop', 'pdf_to_word']
+    directories = ['remove_bg', 'img_to_pdf', 'watermark', 'compress', 'blur_face', 'crop', 'pdf_to_word', 'pdf_encrypt']
     
     print("Creating test files...")
     for subdir in directories:

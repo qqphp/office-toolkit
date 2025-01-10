@@ -81,8 +81,15 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('pdf_to_word.pdf_to_word_page') }}">
-                            <i class="bi bi-file-earmark-word"></i> PDF转Word
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pdf_to_word.pdf_to_word_page' }}" 
+                           href="{{ url_for('pdf_to_word.pdf_to_word_page') }}">
+                            <i class="bi bi-file-earmark-word me-1"></i>PDF转Word
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint == 'pdf_encrypt.pdf_encrypt_page' }}" 
+                           href="{{ url_for('pdf_encrypt.pdf_encrypt_page') }}">
+                            <i class="bi bi-file-earmark-lock me-1"></i>PDF加密
                         </a>
                     </li>
                 </ul>
