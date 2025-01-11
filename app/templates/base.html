@@ -8,6 +8,17 @@
     <meta name="keywords" content="{{ get_page_meta('keywords') }}">
     <meta name="google-site-verification" content="GHQLRe44tvDN2ymQACyAHNozWD1-ZlzuOcijM3ILWQ8" />
     <meta name="baidu-site-verification" content="codeva-sBYeJGKj6Z" />
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRHW2JX30H"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-PRHW2JX30H');
+    </script>
+
     {{ bootstrap.load_css() }}
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
