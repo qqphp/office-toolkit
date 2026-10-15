@@ -60,6 +60,19 @@
     padding: 0.5rem 1rem;
 }
 
+.navbar-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.navbar-brand img {
+    flex-shrink: 0;
+}
+
 .navbar-nav .nav-link {
     padding: 0.8rem 1.2rem;
     border-radius: 4px;
@@ -104,6 +117,36 @@ main {
 
 .footer {
     margin-top: auto;
+    border-top: 1px solid #e9ecef;
+}
+
+.footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem 2rem;
+}
+
+.footer-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0;
+    color: #6c757d;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.footer-link:hover,
+.footer-link:focus-visible {
+    color: #0d6efd;
+}
+
+.footer-link:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: 4px;
+    border-radius: 4px;
 }
 
 /* 404页面样式 */
@@ -144,76 +187,11 @@ main {
     }
 }
 
-/* 添加社交媒体图标颜色 */
-.bi-wechat {
-    color: #07C160;
-}
-
-.bi-tencent-qq {
-    color: #12B7F5;
-}
-
-/* 让图标颜色过渡更平滑 */
-.bi-wechat,
-.bi-tencent-qq {
-    transition: color 0.3s ease;
-}
-
-/* 鼠标悬停时的效果 */
-.bi-wechat:hover {
-    color: #06ae56;
-}
-
-.bi-tencent-qq:hover {
-    color: #10a5dc;
-}
-
-/* 弹窗样式优化 */
-.modal-content {
-    border: none;
-    border-radius: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-}
-
-.modal-header {
-    border-bottom: 1px solid rgba(0,0,0,0.1);
-    padding: 1rem 1.5rem;
-}
-
-.modal-body {
-    padding: 1.5rem;
-}
-
-.modal-title {
-    font-weight: 600;
-    color: #1a1a1a;
-}
-
-.modal-body p {
-    color: #4a4a4a;
-    line-height: 1.6;
-}
-
-.modal-body img {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-/* 友情链接样式 */
-.link-secondary {
-    color: #6c757d;
-    transition: color 0.2s ease;
-}
-
-.link-secondary:hover {
-    color: #0d6efd;
-}
-
 .gap-3 {
     gap: 1rem !important;
 }
 
-/* 在移动端优化友情链接的显示 */
+/* 移动端间距调整 */
 @media (max-width: 576px) {
     .gap-3 {
         gap: 0.5rem !important;

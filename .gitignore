@@ -6,6 +6,7 @@ __pycache__/
 .Python
 env/
 venv/
+.venv/
 ENV/
 build/
 develop-eggs/
@@ -45,9 +46,6 @@ app/static/uploads/pdf_to_word/*
 app/static/uploads/pdf_encrypt/*
 !app/static/uploads/pdf_encrypt/.gitkeep
 
-- app/models/*
-- !app/models/.gitkeep
-
 # IDE
 .idea/
 .vscode/
@@ -58,6 +56,7 @@ app/static/uploads/pdf_encrypt/*
 # 环境变量
 .env
 .env.*
+!.env.example
 
 # 日志文件
 *.log
@@ -71,4 +70,4 @@ logs/
 # 其他
 .coverage
 htmlcov/
-.pytest_cache/ 
+.pytest_cache/

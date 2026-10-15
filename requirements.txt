@@ -17,7 +17,7 @@ alibabacloud-tea-xml==0.0.2
 APScheduler==3.11.0
 async-timeout==5.0.1
 attrs==24.3.0
-backports.zoneinfo==0.2.1
+backports.zoneinfo==0.2.1; python_version < "3.9"
 blinker==1.8.2
 Bootstrap-Flask==2.4.1
 certifi==2024.8.30
@@ -41,9 +41,9 @@ lxml==5.3.0
 MarkupSafe==2.1.5
 multidict==6.1.0
 networkx==3.1
-numba==0.58.1
-numpy==1.24.4
-onnxruntime==1.16.3
+numba==0.60.0
+numpy==1.26.4
+onnxruntime==1.19.2
 opencv-python-headless==4.10.0.84
 packaging==24.2
 pikepdf==9.2.1
@@ -53,13 +53,13 @@ protobuf==5.29.2
 pycparser==2.22
 PyMatting==1.1.13
 python-dateutil==2.9.0.post0
-PyWavelets==1.4.1
+PyWavelets==1.5.0
 referencing==0.35.1
 rembg==2.0.60
 reportlab==4.2.5
 requests==2.32.3
-scikit-image==0.21.0
-scipy==1.10.1
+scikit-image==0.22.0
+scipy==1.12.0
 six==1.17.0
 tifffile==2023.7.10
 tqdm==4.67.1
@@ -71,4 +71,4 @@ wrapt==1.17.0
 WTForms==3.1.2
 yarl==1.15.2
 zipp==3.20.2
-pdf2docx>=0.5.6
+pdf2docx==0.5.8

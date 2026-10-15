@@ -1,14 +1,12 @@
-# 使用Python 3.8.16标准版本作为基础镜像
-FROM python:3.8.16
+# 使用 Python 3.12.9 作为基础镜像
+FROM python:3.12.9-slim-bookworm
 
 # 设置工作目录
 WORKDIR /app
 
-# 使用清华源安装系统依赖
-RUN sed -i 's/deb.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
-    sed -i 's/security.debian.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apt/sources.list && \
-    apt-get update && apt-get install -y \
-    libgl1-mesa-glx \
+# 安装系统依赖（Bookworm 使用 libgl1）
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
