@@ -46,6 +46,9 @@ app/static/uploads/pdf_to_word/*
 app/static/uploads/pdf_encrypt/*
 !app/static/uploads/pdf_encrypt/.gitkeep
 
+# 本地 U2NET 模型文件
+/app/models/u2net/
+
 # IDE
 .idea/
 .vscode/
