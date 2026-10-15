@@ -36,6 +36,6 @@ class Config:
     SCHEDULER_TIMEZONE = "Asia/Shanghai"
 
     # 添加阿里云配置
-    ALIBABA_CLOUD_ACCESS_KEY_ID = 'REDACTED'  # 替换为实际的 Access Key ID
-    ALIBABA_CLOUD_ACCESS_KEY_SECRET = 'REDACTED'  # 替换为实际的 Access Key Secret
+    ALIBABA_CLOUD_ACCESS_KEY_ID = os.environ.get('ALIBABA_CLOUD_ACCESS_KEY_ID', '')
+    ALIBABA_CLOUD_ACCESS_KEY_SECRET = os.environ.get('ALIBABA_CLOUD_ACCESS_KEY_SECRET', '')
     ALIBABA_CLOUD_ENDPOINT = 'imageseg.cn-shanghai.aliyuncs.com'
