@@ -11,7 +11,7 @@
 
 ## 使用
 
-1. 安装 Python 3.12.9 版本（`.python-version` 和 Docker 镜像已固定版本）
+1. 安装 Python 3.12.9 版本（`.python-version` 已固定版本）
 2. 创建独立虚拟环境并安装依赖（Windows PowerShell）：
 
    ```powershell
@@ -30,4 +30,4 @@ Linux/macOS 使用 `.venv/bin/python` 替换上述虚拟环境解释器路径。
 
 1. 文件上传目录为 `app/static/uploads`，请确保有足够的空间
 2. 文件清理任务每30分钟执行一次，请确保有足够的空间
-3. 阿里云配置在 `config.py` 文件中，请确保有正确的配置
+3. 使用阿里云图片处理功能前，请设置环境变量 `ALIBABA_CLOUD_ACCESS_KEY_ID` 和 `ALIBABA_CLOUD_ACCESS_KEY_SECRET`，不要将凭据写入代码或提交到 Git
